@@ -2,14 +2,23 @@
 <html>
 
 <head>
-    <title>{% block title %}Get some stocks{% endblock %}</title>
+    <title>{% block title %}News Harbor{% endblock %}</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'good_news/style.css' %}">
+    <link rel="stylesheet" href="{% static 'newsharborapp/style.css' %}">
 </head>
 
-
+<header>
+    <nav>
+        <ul>
+            <li style = "font-size: 250%; color:gold; margin-left: 0%;">NEWS HARBOR</li>
+            <li><a href="{% url 'newsharborapp:home' %}">Homepage</a></li>
+            <li><a href="{% url 'newsharborapp:home' %}">Homepage</a></li>
+        </ul>
+    </nav>
+    
+</header>
 <body>
-    {% block content %}asd{% endblock %}
+    {% block content %}{% endblock %}
 </body>
 
 </html>

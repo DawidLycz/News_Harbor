@@ -1,0 +1,70 @@
+header {
+    background: #202020 url("images/header_backgroundx.jpg") repeat;
+    color: #fff;
+    padding-top:20px;
+    padding-bottom: 20px;
+    border-radius: 10px;
+    border: 5px inset rgb(15, 15, 15); 
+
+}
+
+
+nav ul {
+    list-style: none;
+}
+
+nav li {
+    display: inline;
+    margin-right: 20px;
+    font-size: 150%;
+}
+
+a {
+    text-decoration: none;
+    color: #fff;
+}
+
+html, body {
+
+    background: rgb(214, 213, 213) url("images/background.png") repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+.news-box {
+    background: #202020;
+    border: 5px inset rgb(15, 15, 15); 
+    width: 22%;
+    margin: 1%;
+    height: 50%; 
+    overflow: hidden; 
+    color: rgb(207, 245, 255);
+    position: relative; 
+    display: inline-block;
+    vertical-align: top;
+    border-radius: 10px;
+}
+
+.news-box img {
+    width: 100%;
+    height: 80%; 
+    object-fit: cover; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+}
+
+.news-box .caption {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 20%; 
+    padding: 10px;
+    box-sizing: border-box; 
+    text-align: center; 
+    font-size: 150%;
+}

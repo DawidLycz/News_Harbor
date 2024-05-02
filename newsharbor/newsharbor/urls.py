@@ -23,7 +23,7 @@ app_name = "newsharborapp"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('newsharbor/', include('newsharborapp.urls'))
+    path('', include('newsharborapp.urls'))
 ]
 
 if settings.DEBUG:
