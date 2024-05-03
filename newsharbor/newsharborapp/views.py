@@ -23,6 +23,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 
 from .models import Article, Image, Paragraph
+from .forms import *
 
 class IndexView(generic.ListView):
     
@@ -43,5 +44,39 @@ class IndexView(generic.ListView):
         return context
     
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        print (request)
         return super().get(request, *args, **kwargs)
     
+class ArticleDetailView(generic.DetailView):
+
+    model = Article
+    template_name = "newsharborapp/article.html"
+    context_object_name = 'article.html'
+
+############### Authorisation ##############
+
+class CustomLoginView(LoginView):
+    template_name = 'login.html'
+    form_class = CustomAuthenticationForm
+    success_url = reverse_lazy('newsharborapp:home')
+
+    def form_valid(self, form):
+        login(self.request, form.get_user())
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return self.success_url
+
+
+class CustomLogoutView(LogoutView):
+    next_page = reverse_lazy('newsharborapp:home')
+
+    def get(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return redirect(self.next_page)
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
+

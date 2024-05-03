@@ -12,7 +12,12 @@
         <ul>
             <li style = "font-size: 250%; color:gold; margin-left: 0%;">NEWS HARBOR</li>
             <li><a href="{% url 'newsharborapp:home' %}">Homepage</a></li>
-            <li><a href="{% url 'newsharborapp:home' %}">Homepage</a></li>
+            <li><a href="{% url 'newsharborapp:login' %}">Login</a></li>
+            <form action="{% url 'newsharborapp:logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button  type="submit">Logout</button>
+            </form>
+            <li style="float:right; color:#fa7000;">Logged as: {{user}}</li>
         </ul>
     </nav>
     

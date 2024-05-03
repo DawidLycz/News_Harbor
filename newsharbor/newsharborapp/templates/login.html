@@ -1,0 +1,61 @@
+
+
+
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Login
+{% endblock %}
+    
+{% block content %}
+
+<style>
+    .login-container {
+         background-color: #ffffff;
+         border-radius: 8px;
+         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+         padding: 20px;
+         width: 30%;
+         justify-content: center;
+     }
+
+     .login-container h2 {
+         text-align: center;
+     }
+
+     .login-form {
+         margin-top: 20px;
+     }
+
+     .form-group {
+         margin-bottom: 15px;
+     }
+
+     .form-group label {
+         display: block;
+         margin-bottom: 5px;
+     }
+
+     .form-group input {
+         width: 100%;
+         padding: 10px;
+         border-radius: 5px;
+         border: 1px solid #ccc;
+     }
+
+
+
+     .form-group button:hover {
+         background-color: #0056b3;
+     }
+ </style>
+<div class="form-box">
+<h2 style= "color: rgb(216, 216, 216); text-align: center; ">Login</h2>
+<form method="post" action="{% url 'newsharborapp:login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">  LOGIN  </button>
+</form>
+</div>
+
+{% endblock %}

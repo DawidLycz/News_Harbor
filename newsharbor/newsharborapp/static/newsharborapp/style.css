@@ -1,3 +1,5 @@
+/* _______________________________BASE__________________________________________ */
+
 header {
     background: #202020 url("images/header_backgroundx.jpg") repeat;
     color: #fff;
@@ -17,11 +19,24 @@ nav li {
     display: inline;
     margin-right: 20px;
     font-size: 150%;
-}
-
-a {
     text-decoration: none;
     color: #fff;
+}
+
+nav a {
+    text-decoration: none;
+    color: #fff;
+}
+
+nav button{
+    background: none;
+    border: none; 
+    color: #fff;
+    font-size: 150%;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: 'Times New Roman', Times, serif;
+
 }
 
 html, body {
@@ -33,6 +48,8 @@ html, body {
     margin: 0;
     padding: 0;
 }
+
+/* ________________________________HOMEPAGE_________________________________________ */
 
 
 .news-box {
@@ -47,6 +64,13 @@ html, body {
     display: inline-block;
     vertical-align: top;
     border-radius: 10px;
+}
+
+.news-box:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    background: #f7ab39;
+    cursor: pointer;
+
 }
 
 .news-box img {
@@ -67,4 +91,63 @@ html, body {
     box-sizing: border-box; 
     text-align: center; 
     font-size: 150%;
+}
+
+/* _____________________________AUTHORISATION____________________________________________ */
+
+.form-box{
+    background-color: rgb(37, 37, 37);
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 10px;
+    justify-content: center; 
+    margin-left: 30%;
+    margin-top: 2%; 
+    width: 40%;
+}
+
+.custom-form-field {
+    width: 80%;
+    margin-bottom: 30px;
+    font-size: 30px;
+    background-color:  rgb(221, 221, 221);
+    border: 5px inset rgb(216, 216, 216);
+    color: #0e0e0e;
+    margin-left: 10%;
+}
+
+label {
+    color:rgb(207, 245, 255);
+    font-size: 40px;
+    display: block;
+    text-align: center;
+
+}
+
+.custom-form-button{
+    width: 40%;
+}
+
+.form-box li{
+    color: rgb(207, 245, 255);
+    font-size: 120%;
+}
+
+.form-box button {
+    width: 50%;
+    margin-left:25%;
+    margin-bottom: 1%;
+    padding:1%;
+    background-color: rgb(214, 213, 213);
+    color: #000000;
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+    cursor: pointer;
+    font-size:150%;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+
+}
+
+.form-box button:hover{
+    background-color: #f7ab39;
 }

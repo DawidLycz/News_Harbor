@@ -54,3 +54,16 @@ class Image(models.Model):
         if not self.name or self.name == "image":
             self.name = self.get_name()
         super().save(*args, **kwargs)
+
+class Comment(models.Model):
+    author = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="comments")
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField(default='', blank=True)
+    votes_up = models.IntegerField(default=0)
+    votes_down = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.text
+    
+    def check_sentiment(self):
+        return self.votes_up - self.votes_down

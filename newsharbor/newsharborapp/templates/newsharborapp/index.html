@@ -7,12 +7,12 @@
 {% block content %}
 {% for article in articles %}
 
-<article class="news-box">
+<a href="{% url 'newsharborapp:article' article.id %}" class="news-box"> 
     <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
     <div class="caption">
         {{ article.title }}
     </div>
-</article>
+</a> 
 
 {% endfor %}
 
