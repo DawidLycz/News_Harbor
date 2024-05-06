@@ -1,6 +1,6 @@
 import datetime
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.utils import timezone
@@ -8,6 +8,31 @@ from django.utils import timezone
 from django.contrib import admin
 from django.db import models
 from django.utils import timezone
+
+
+class Profile(models.Model):
+    name = models.CharField(max_length=255, default='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    is_editor = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+    
+    def get_profile_name(self):
+        return "profile_" + self.user.username
+    
+    def belong_to(self, group_name):
+        if self.user.groups.filter(name = group_name):
+            return True
+        else:
+            return False
+
+    def save(self, *args, **kwargs):
+        if self.belong_to("Editor"):
+            self.is_editor = True
+        if not self.name or self.name == "profile":
+            self.name = self.get_profile_name()
+        super().save(*args, **kwargs)
 
 
 class Article(models.Model):
@@ -19,7 +44,6 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
-
 
 
 class Paragraph(models.Model):
@@ -57,7 +81,7 @@ class Image(models.Model):
 
 class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="comments")
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments', default=1)
     text = models.TextField(default='', blank=True)
     votes_up = models.IntegerField(default=0)
     votes_down = models.IntegerField(default=0)

@@ -1,17 +1,18 @@
 {% extends 'newsharborapp/base.html' %}
 
 {% block title %}
-   Login
+   Register
 {% endblock %}
     
 {% block content %}
 
 <div class="form-box">
-<h2>Login</h2>
-<form method="post" action="{% url 'newsharborapp:login' %}">
+<h2>Registration</h2>
+<form method="post" action="{% url 'newsharborapp:register' %}">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">  LOGIN  </button>
+    <button type="submit">  REGISTER  </button>
+    <button type="reset">  RESET  </button>
 </form>
 </div>
 

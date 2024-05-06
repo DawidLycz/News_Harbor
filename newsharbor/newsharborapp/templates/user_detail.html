@@ -1,0 +1,40 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Profile
+{% endblock %}
+    
+{% block content %}
+
+<div class="profile-data-cell-box">
+   <span>Username:</span>
+   <b>{{profile.user}}</b>
+</div>
+<div class="profile-data-cell-box">
+   <span>First Name:</span>
+   <b>{{profile.user.first_name}}</b>
+</div>
+<div class="profile-data-cell-box">
+   <span>Last Name:</span>
+   <b>{{profile.user.last_name}}</b>
+</div>
+<div class="profile-data-cell-box">
+   <span>Email:</span>
+   <b>{{profile.user.email}}</b>
+</div>
+<div class="profile-data-cell-box">
+   <span>With us since:</span>
+   <b>{{profile.user.date_joined}}</b>
+</div>
+<div class="profile-data-cell-box">
+   <span>Title:</span>
+   <b>{{title}}</b>
+</div>
+<a href="{% url 'newsharborapp:user-edit' profile.user.id %}">
+   <button class="custom-button-dark" style="width: 30%;" type="button">Edit Data</button>
+</a>
+<a href="{% url 'newsharborapp:change-password' %}">
+   <button class="custom-button-dark" style="width: 30%;" type="button">Change Password</button>
+</a>
+
+{% endblock %}
