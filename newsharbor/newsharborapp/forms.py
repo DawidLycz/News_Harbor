@@ -39,8 +39,8 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password2'].help_text = ''
 
 class CustomUserEditForm(UserChangeForm):
-
     password = None
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email']
@@ -64,3 +64,35 @@ class CustomPasswordChangeForm(PasswordChangeForm):
         self.fields['new_password1'].widget.attrs['class'] = 'custom-form-field'
         self.fields['new_password1'].help_text = ''
         self.fields['new_password2'].widget.attrs['class'] = 'custom-form-field'
+
+class ImageRenameForm(forms.ModelForm):
+
+    class Meta:
+        model = Image
+        fields = ['name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs['class'] = 'custom-form-field'
+
+class ImageAssignForm(forms.ModelForm):
+
+    class Meta:
+        model = Image
+        fields = ['articles']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['articles'].widget.attrs['class'] = 'custom-form-field'
+
+class ImageCreateForm(forms.ModelForm):
+    class Meta:
+        model = Image
+        fields = ['photo']
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['photo'].widget.attrs['class'] = 'custom-form-field'
+
+

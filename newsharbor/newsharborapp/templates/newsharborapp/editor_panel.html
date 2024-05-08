@@ -1,0 +1,14 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Editor Panel
+{% endblock %}
+    
+{% block content %}
+
+<h1 style="text-align: center; font-size: 300%;">Editor Panel</h1>
+<a href="{% url 'newsharborapp:images' %}">
+   <button class="custom-button-dark" style="width: 30%;" type="button">Images</button>
+</a>
+
+{% endblock %}

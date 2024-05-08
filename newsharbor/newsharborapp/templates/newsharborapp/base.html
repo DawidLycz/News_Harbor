@@ -18,11 +18,13 @@
             </form>
             <li style="float:right; color:#fa7000;">Logged as: {{user}}</li>
             <li style="float:right;"><a href="{% url 'newsharborapp:profile' user.profile.id %}">Profile</a></li>
+            {% if user.profile.is_editor %}
+            <li style="float:right;"><a href="{% url 'newsharborapp:editor-panel' %}">Editor Panel</a></li>
+            {% endif %}
             {% else %}
             <li><a href="{% url 'newsharborapp:login' %}">Login</a></li>
             <li><a href="{% url 'newsharborapp:register' %}">Register</a></li>
             <li style="float:right; color:#fa7000;">Logged as: Guest</li>
-
             {% endif %}
         </ul>
     </nav>

@@ -1,0 +1,23 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Images
+{% endblock %}
+    
+{% block content %}
+
+{% for image in images %}
+
+<a href="{% url 'newsharborapp:image' image.id %}" class="image-box"> 
+    <img src="{{ image.photo.url }}" alt="{{ image.photo }}">
+    <div class="caption">
+        {{ image.name }}
+    </div>
+</a> 
+{% endfor %}
+
+<a href="{% url 'newsharborapp:image-create' %}">
+    <button class="custom-button-dark" style="width: 30%;" type="button">Add New Image</button>
+</a>
+
+{% endblock %}

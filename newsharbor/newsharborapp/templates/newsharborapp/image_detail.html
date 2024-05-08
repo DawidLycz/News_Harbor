@@ -1,0 +1,44 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Images
+{% endblock %}
+    
+{% block content %}
+
+
+<div class="big-image-box"> 
+    <img src="{{ image.photo.url }}" alt="{{ image.photo }}">
+</div> 
+
+<div class="profile-data-cell-box">
+    <span>Image Name:</span>
+    <b>{{image.name}}</b>
+ </div>
+ <div class="profile-data-cell-box">
+    <span>Uploaded:</span>
+    <b>{{image.date}}</b>
+ </div>
+<div class="profile-data-cell-box">
+    <span>Belong to article:</span>
+    {% for art in image.articles.all %}
+        <p>{{art.title}}</p>
+    {% endfor %}
+ </div>
+
+
+
+<a href="{% url 'newsharborapp:images' %}">
+    <button class="custom-button-dark" style="width: 20%; margin-left: 2%; transform: translateX(0%);" type="button">See other</button>
+</a>
+<a href="{% url 'newsharborapp:image-rename' image.id %}">
+    <button class="custom-button-dark" style="width: 20%; margin-left: 2%; transform: translateX(0%);" type="button">Rename</button>
+</a>
+<a href="{% url 'newsharborapp:image-assign' image.id %}">
+    <button class="custom-button-dark" style="width: 20%; margin-left: 2%; transform: translateX(0%);" type="button">Assign</button>
+</a>
+<a href="{% url 'newsharborapp:image-delete' image.id %}">
+    <button class="custom-button-dark" style="width: 20%; margin-left: 2%; transform: translateX(0%);" type="button">Delete</button>
+</a>
+
+{% endblock %}

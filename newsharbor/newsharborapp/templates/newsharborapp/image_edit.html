@@ -1,0 +1,24 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+    {{operation}}
+{% endblock %}
+
+{% block content %}
+<div class="form-box">
+  <h2>{{operation}}</h2>
+  <h3>Ctrl + LMB to select multiple</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="custom-button" type="submit" name="action" value="save">SAVE</button>
+    {% if operation == 'Assign Image' %}
+    <button class="custom-button" type="submit" name="action" value="unassgin">UNASSIGN FROM ALL</button>
+    {% endif %}
+    <button class="custom-button" type="reset">RESET</button>
+    <a href="{% url 'newsharborapp:image' image.id %}">
+      <button class="custom-button" type="button">CANCEL</button>
+    </a>
+  </form>
+</div>
+{% endblock %}

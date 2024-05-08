@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.models import User
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -29,14 +29,14 @@ from .forms import *
 class IndexView(generic.ListView):
     
     model = Article
-    template_name = "newsharborapp/index.html"
+    template_name = 'newsharborapp/index.html'
     context_object_name = 'articles'
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         articles = Article.objects.filter(for_display=True)
         for article in articles:
-            photos = article.images.filter(is_lead=True)
+            photos = article.images.all()
             if photos:
                 article.photo = photos[0].photo
             else:
@@ -45,13 +45,12 @@ class IndexView(generic.ListView):
         return context
     
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        print (request)
         return super().get(request, *args, **kwargs)
     
 class ArticleDetailView(generic.DetailView):
 
     model = Article
-    template_name = "newsharborapp/article.html"
+    template_name = 'newsharborapp/article.html'
     context_object_name = 'article.html'
 
 
@@ -101,22 +100,20 @@ class CustomRegisterView(generic.CreateView):
 class ProfileDetailView(generic.DetailView):
     template_name = 'user_detail.html'
     model = Profile
-    content_object_name = "profile"
+    content_object_name = 'profile'
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         profile = self.get_object()
         title = profile.user.groups.all()[0]
-        print (title)
-        context["title"] = title
+        context['title'] = title
         return context
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         profile = self.get_object()
         user = profile.user
         req_user = self.request.user
-        if user != req_user and not req_user.profile.belong_to("Editor in Chief"):
-            print("nope")
+        if user != req_user and not req_user.profile.belong_to('Editor in Chief'):
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
 
@@ -154,3 +151,105 @@ class UserChangePasswordView(FormView):
     
     def get_success_url(self) -> str:
         return reverse_lazy('newsharborapp:profile', kwargs={'pk': self.request.user.profile.id})
+
+############### Work ##############
+
+class EditorPermissionMixin(PermissionRequiredMixin):
+    permission_required = 'newsharborapp.Editor'
+
+    def handle_no_permission(self):
+        return redirect('newsharborapp:home') 
+
+
+class EditorPanelView(generic.TemplateView):
+
+    template_name='newsharborapp/editor_panel.html'
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        if not self.request.user.profile.is_editor:
+            return redirect(reverse_lazy('newsharborapp:home'))
+        return super().get(request, *args, **kwargs)
+    
+class ImageListView(generic.ListView):
+
+    model = Image
+    template_name = 'newsharborapp/image_list.html'
+    context_object_name = 'images'
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+
+        if not self.request.user.profile.is_editor:
+            return redirect(reverse_lazy('newsharborapp:home'))
+        return super().get(request, *args, **kwargs)
+    
+class ImageDetailView(generic.DetailView):
+
+    model = Image
+    template_name = 'newsharborapp/image_detail.html'
+    context_object_name = 'image'
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+
+        if not self.request.user.profile.is_editor:
+            return redirect(reverse_lazy('newsharborapp:home'))
+        return super().get(request, *args, **kwargs)
+
+class ImageRenameView(generic.UpdateView):
+
+    model = Image
+    template_name = 'newsharborapp/image_edit.html'
+    form_class = ImageRenameForm
+    context_object_name = 'image'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['operation'] = 'Rename Image'
+        return context
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Image, pk=self.kwargs['pk'])
+
+    def form_valid(self, form):
+        form.save()
+        self.get_object().id
+        return redirect(reverse_lazy('newsharborapp:image', kwargs={'pk': self.get_object().id}))
+
+class ImageAssignView(generic.UpdateView):
+
+    model = Image
+    template_name = 'newsharborapp/image_edit.html'
+    form_class = ImageAssignForm
+    context_object_name = 'image'
+
+    def form_valid(self, form):
+        action = self.request.POST.get('action')
+        if action == 'unassgin':
+            image = self.get_object()
+            image.articles.clear()
+            image.save()
+        else:
+            form.save()
+        return redirect(reverse_lazy('newsharborapp:image', kwargs={'pk': self.get_object().id}))
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['operation'] = 'Assign Image'
+        return context
+    
+    def get_object(self, queryset=None):
+        return get_object_or_404(Image, pk=self.kwargs['pk'])
+
+
+class ImageCreateView(generic.CreateView):
+
+    model = Image
+    form_class = ImageCreateForm
+    template_name = 'newsharborapp/image_create.html'
+    success_url = reverse_lazy('newsharborapp:images')
+
+class ImageDeleteView(generic.DeleteView):
+
+    model = Image
+    template_name = 'newsharborapp/image_delete.html'
+    success_url = reverse_lazy('newsharborapp:images')
+

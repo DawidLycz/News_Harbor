@@ -1,0 +1,20 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+    Create Image
+{% endblock %}
+
+{% block content %}
+<div class="form-box">
+  <h2>Create Image</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <button class="custom-button" type="submit">CREATE</button>
+    <a href="{% url 'newsharborapp:images'%}">
+      <button class="custom-button" type="button">CANCEL</button>
+    </a>
+  </form>
+
+</div>
+{% endblock %}

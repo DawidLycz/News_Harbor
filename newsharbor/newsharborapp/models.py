@@ -57,27 +57,33 @@ class Paragraph(models.Model):
 
 class Image(models.Model):
 
-    name = models.CharField(max_length=255, default="image")
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="images")
+    name = models.CharField(max_length=255, default="image", blank=True)
+    articles = models.ManyToManyField(Article, related_name="images", blank=True, null=True)
     photo = models.ImageField(upload_to='article_images/')
-    is_lead = models.BooleanField(default=False)
+    pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True, blank=True)
     
-    class Meta:
-        unique_together = ('article', 'is_lead')
 
     def __str__(self):
         return self.name
     
     def get_name(self):
         prefix = "image_"
-        if self.is_lead:
-            prefix = "lead_image_"
-        return prefix + self.article.title.lower().replace(" ", "_")
+        if self.articles.exists():
+            name = prefix + self.articles.first().title.lower().replace(" ", "_")
+        elif self.pub_date:
+            name = prefix + str(self.pub_date)
+        else:
+            name = "image"
+        return name
+    
+    def date(self):
+        return self.pub_date.date()
         
     def save(self, *args, **kwargs):
-        if not self.name or self.name == "image":
+        if not self.name or self.name == 'image':
             self.name = self.get_name()
         super().save(*args, **kwargs)
+
 
 class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="comments")
