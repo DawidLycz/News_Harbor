@@ -1,0 +1,25 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Editor Panel
+{% endblock %}
+    
+{% block content %}
+
+<h1>Articles</h1>
+
+{% for article in articles %}
+<a href="{% url 'newsharborapp:article-edit' article.id %}" class="article-cell-box">
+   <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
+   <p>{{article}}</p>
+   <span style="margin-left: 50%;">{{article.pub_date}}</span>
+   <span style="top:90%;">{{article.author}}</span>
+   {% if article.for_display %}
+     <span>For display</span>
+   {% else %}
+     <span>Not for display</span>
+   {% endif %}
+</a>
+{% endfor %}
+
+{% endblock %}

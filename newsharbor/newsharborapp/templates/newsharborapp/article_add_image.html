@@ -1,0 +1,26 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Images
+{% endblock %}
+    
+{% block content %}
+<h1>Add Image to article:</h1>
+<h2>{{article.title}}</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for image in images %}
+    <button type="submit" name="action" value="{{image.id}}" class="image-box"> 
+        <img src="{{ image.photo.url }}" alt="{{image.photo}}">
+        <div class="caption">
+            {{ image.name }}
+        </div>
+    </button> 
+    {% endfor %}
+</form>
+
+<a href="{% url 'newsharborapp:article-edit' article.id %}">
+    <button class="custom-button-dark" style="width: 30%;" type="button">Cancel</button>
+</a>
+
+{% endblock %}

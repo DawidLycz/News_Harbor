@@ -4,6 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from django.contrib import admin
 from django.db import models
@@ -40,7 +41,10 @@ class Article(models.Model):
     author = models.ForeignKey(User, on_delete=models.SET_DEFAULT, default=None, null=True)
     for_display = models.BooleanField(default=False)
     popularity = models.IntegerField(default=0)
-    pub_date = models.DateTimeField(verbose_name="date published", auto_now=True)
+    pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-pub_date']
 
     def __str__(self):
         return self.title
@@ -52,8 +56,13 @@ class Paragraph(models.Model):
     is_lead = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('article', 'is_lead')
+        constraints = [
+            models.UniqueConstraint(fields=['article', 'is_lead'], condition=models.Q(is_lead=True), name='unique_lead_paragraph'),
+        ]
 
+    def clean(self):
+        if self.is_lead and self.article.paragraphs.filter(is_lead=True).exists():
+            raise ValidationError('There can only be one lead paragraph per article.')
 
 class Image(models.Model):
 

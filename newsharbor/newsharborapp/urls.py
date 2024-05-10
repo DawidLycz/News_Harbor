@@ -18,6 +18,7 @@ urlpatterns = [
     path('profile/change-password/', views.UserChangePasswordView.as_view(), name='change-password'),
     #### Work ####
     path('editor-panel', views.EditorPanelView.as_view(), name='editor-panel'),
+
     path('images/', views.ImageListView.as_view(), name='images'),
     path('images/<int:pk>/', views.ImageDetailView.as_view(), name='image'),
     path('images/<int:pk>/rename', views.ImageRenameView.as_view(), name='image-rename'),
@@ -25,4 +26,7 @@ urlpatterns = [
     path('images/create/', views.ImageCreateView.as_view(), name='image-create'),
     path('images/<int:pk>/delete', views.ImageDeleteView.as_view(), name='image-delete'),
 
+    path('articles/select', views.ArticleSelectView.as_view(), name='article-select'),
+    path('articles/<int:pk>/edit/', views.ArticleEditView.as_view(), name='article-edit'),
+    path('articles/<int:pk>/add-image/', views.ArticleAddImageView.as_view(), name='article-add-image'),
 ]

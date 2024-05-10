@@ -83,6 +83,27 @@ html, body {
     cursor: pointer;
 }
 
+h1{
+    color:rgb(207, 245, 255);
+    text-align: center;
+    font-size: 300%;
+}
+
+h2{
+    color:rgb(207, 245, 255);
+    text-align: center;
+    font-size: 200%;
+}
+
+h3{
+    color:rgb(207, 245, 255);
+    text-align: center;
+}
+
+a{
+    text-decoration: none;
+}
+
 /* ________________________________HOMEPAGE_________________________________________ */
 
 
@@ -215,16 +236,17 @@ label {
 
 .image-box {
     background: #202020;
-    border: 5px inset rgb(15, 15, 15); 
     width: 30%;
     margin: 1%;
-    height: 50%; 
+    height: 50vh; 
     overflow: hidden; 
     color: rgb(207, 245, 255);
     position: relative; 
     display: inline-block;
     vertical-align: top;
     border-radius: 10px;
+    border: 5px inset rgb(15, 15, 15); 
+
 }
 
 .image-box:hover{
@@ -273,4 +295,154 @@ label {
     position: absolute; 
     top: 0; 
     left: 0; 
+}
+
+.article-cell-box {
+    display: flex; 
+    align-items: center; 
+    width: 90%;
+    background-color: rgb(37, 37, 37);
+    color: rgb(207, 245, 255);
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+    margin-left: 5%;
+    margin-top: 1%;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.article-cell-box:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    background: #f7ab39;
+    cursor: pointer;
+}
+
+.article-cell-box p{
+    color:rgb(207, 245, 255);
+    font-weight: bold;
+    margin-left: 2%;
+    font-size: 250%;
+}
+
+.article-cell-box span{
+    position: absolute;
+    color:rgb(207, 245, 255);
+    font-weight: bold;
+    margin-left: 90%;
+    transform: translateX(-50%);
+    top:1%;
+}
+
+.article-cell-box img{
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+    width: 20%;
+    height: auto; 
+    object-fit: cover; 
+    top: 0; 
+    left: 0; 
+}
+
+/* ____________________________ARTICLE EDIT________________________________________________________ */
+
+.article-edit-panel-box{
+    width:100%;
+}
+
+.article-input-box{
+    display: inline-block;
+    border: 5px inset rgb(15, 15, 15);
+    background-color: rgb(37, 37, 37); 
+    border-radius: 5px;
+    width:60%;
+    margin:2%;
+}
+
+.common-textarea{
+    width: 90%;
+    margin: 5%;
+    background-color: rgb(43, 43, 43);
+    height:500px;
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+    font-size: 120%;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.lead-textarea{
+    width: 90%;
+    margin: 5%;
+    background-color: rgb(61, 61, 61);
+    height:500px;
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+    font-size: 250%;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+}
+
+.article-input-box form button{
+    width: 30%;
+    margin-bottom: 30px;
+    font-size: 30px;
+    background-color:  rgb(221, 221, 221);
+    border: 5px inset rgb(216, 216, 216);
+    color: #0e0e0e;
+    margin: 1%;
+}
+
+.article-input-box form button:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    background: #f7ab39;
+    cursor: pointer;
+}
+
+.article-image-box{
+    position: absolute;
+    display: inline-block;
+    border: 5px inset rgb(15, 15, 15);
+    background-color: rgb(37, 37, 37); 
+    border-radius: 5px;
+    width:33%;
+    margin-top:2%;
+}
+
+.article-image-box img{
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+}
+
+.article-image-box-image-button{
+    border: 5px inset rgb(15, 15, 15);
+    background-color: rgb(37, 37, 37); 
+    border-radius: 5px;
+    padding:0;
+    width: 90%;
+    margin-left: 5%;
+    margin-top:2%;
+
+}
+
+.article-image-box button:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    cursor: pointer;  
+}
+
+.article-image-box-click-button{
+    font-size: 30px;
+    background-color:  rgb(221, 221, 221);
+    border: 5px inset rgb(216, 216, 216);
+    color: #0e0e0e;
+    margin: 1%;
+    margin-left: 50%;
+    transform:translate(-50%)
+}
+
+.article-image-box button:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    background: #f7ab39;
+    cursor: pointer;  
 }

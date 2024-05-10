@@ -58,7 +58,7 @@ class ArticleDetailView(generic.DetailView):
 
 
 class CustomLoginView(LoginView):
-    template_name = 'login.html'
+    template_name = 'authorisation/login.html'
     form_class = CustomAuthenticationForm
     success_url = reverse_lazy('newsharborapp:home')
 
@@ -83,7 +83,7 @@ class CustomLogoutView(LogoutView):
     
 
 class CustomRegisterView(generic.CreateView):
-    template_name = 'register.html'
+    template_name = 'authorisation/register.html'
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('newsharborapp:home')
 
@@ -98,7 +98,7 @@ class CustomRegisterView(generic.CreateView):
     
 
 class ProfileDetailView(generic.DetailView):
-    template_name = 'user_detail.html'
+    template_name = 'authorisation/user_detail.html'
     model = Profile
     content_object_name = 'profile'
 
@@ -121,7 +121,7 @@ class ProfileDetailView(generic.DetailView):
 class UserEditView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = CustomUserEditForm
-    template_name = 'user_edit.html'
+    template_name = 'authorisation/user_edit.html'
     
     def get(self, request: HttpRequest, *args: str, **kwargs: Any) -> HttpResponse:
         if self.request.user != self.get_object():
@@ -136,7 +136,7 @@ class UserEditView(LoginRequiredMixin, UpdateView):
 
 
 class UserChangePasswordView(FormView):
-    template_name = 'user_change_password.html'
+    template_name = 'authorisation/user_change_password.html'
     form_class = CustomPasswordChangeForm
 
     def form_valid(self, form):
@@ -252,4 +252,77 @@ class ImageDeleteView(generic.DeleteView):
     model = Image
     template_name = 'newsharborapp/image_delete.html'
     success_url = reverse_lazy('newsharborapp:images')
+
+class ArticleSelectView(generic.ListView):
+
+    model = Article
+    template_name = 'newsharborapp/article_select.html'
+    context_object_name = 'articles'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        articles = Article.objects.all()
+        for article in articles:
+            photos = article.images.all()
+            if photos:
+                article.photo = photos[0].photo
+            else:
+                article.photo = Image.objects.all()[0].photo
+        context['articles'] = articles
+        return context
+
+
+class ArticleEditView(generic.DetailView):
+
+    model = Article
+    template_name = 'newsharborapp/article_edit.html'
+    context_object_name = 'article'
+
+    def save_all(self, request, *args, **kwargs):
+        for paragraph in self.get_object().paragraphs.all():
+            paragraph.text = request.POST.get(f'paragraph{paragraph.id}')
+            paragraph.save()
+
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        if action == "create_lead":
+            Paragraph.objects.create(article=self.get_object(), is_lead=True)
+
+        elif action == "create_another":
+            self.save_all(request, *args, **kwargs)
+            Paragraph.objects.create(article=self.get_object(), is_lead=False)
+
+        elif action == "save_paragraphs":
+            self.save_all(request, *args, **kwargs)
+
+        elif "delete_paragraph" in action:
+            self.save_all(request, *args, **kwargs)
+            pk = action.rsplit("_")[-1]
+            Paragraph.objects.get(pk=pk).delete()
+        
+        elif "delete_image" in action:
+            pk = action.rsplit("_")[-1]
+            article = self.get_object()
+            image = Image.objects.get(pk=pk)
+            article.images.remove(image)
+        return redirect(request.path)
+    
+class ArticleAddImageView(generic.DetailView):
+
+    model = Article
+    template_name = 'newsharborapp/article_add_image.html'
+    context_object_name = 'article'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['images'] = Image.objects.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        image = Image.objects.get(pk=action)
+        article = self.get_object()
+        article.images.add(image)
+        article.save()
+        return redirect(reverse_lazy('newsharborapp:article-edit', kwargs={'pk': self.get_object().id}))
 

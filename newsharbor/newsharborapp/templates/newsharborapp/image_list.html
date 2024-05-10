@@ -7,7 +7,6 @@
 {% block content %}
 
 {% for image in images %}
-
 <a href="{% url 'newsharborapp:image' image.id %}" class="image-box"> 
     <img src="{{ image.photo.url }}" alt="{{ image.photo }}">
     <div class="caption">

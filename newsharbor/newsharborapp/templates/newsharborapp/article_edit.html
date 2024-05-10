@@ -1,0 +1,54 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Editor Panel
+{% endblock %}
+    
+{% block content %}
+
+<h1>{{article}}</h1>
+
+<div class="article-edit-panel-box">
+   <div class="article-input-box">
+      {% if not article.paragraphs.all %}
+      <form method="post">
+         {% csrf_token %}
+         <h2>There is no paragraphs yet.</h2>
+         <button style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="create_lead">Create lead paragraph</button>
+      </form>
+      {% else %}
+      <form method="post">
+         {% csrf_token %}
+         {% for paragraph in article.paragraphs.all %}
+            {% if forloop.first %}
+               <textarea class="lead-textarea" name="paragraph{{ paragraph.id }}" >{{ paragraph.text }}</textarea>
+            {% else %}
+               <textarea class="common-textarea" name="paragraph{{ paragraph.id }}">{{ paragraph.text }}</textarea>
+               <button style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="delete_paragraph_{{paragraph.id}}">Delete Paragraph</button>
+            {% endif %}
+         {% endfor %}
+         <button type="submit" name="action" value="create_another">Add Paragraph</button>
+         <button type="submit" name="action" value="save_paragraphs">Save Paragraphs</button>
+         <button type="reset">Reset</button>
+      </form>
+      {% endif %}
+   </div>
+
+   <div class="article-image-box">
+      <h2>Images</h2>
+      <h3>Click to unassign from article</h3>
+      <h3>Assingning and Unassigning image resets text</h3>
+      <form method="post">
+         {% csrf_token %}
+         {% for image in article.images.all %}
+               <button class="article-image-box-image-button" type="submit" name="action" value="delete_image_{{image.id}}">
+                  <img src="{{ image.photo.url }}" alt="Image">
+               </button>
+         {% endfor %}
+         <a href="{% url 'newsharborapp:article-add-image' article.id %}">
+            <button class="article-image-box-click-button" type="button">Assing new image</button>
+         </a>
+      </form>
+   </div>
+</div>
+{% endblock %}

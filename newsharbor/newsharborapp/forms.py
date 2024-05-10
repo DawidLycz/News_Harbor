@@ -96,3 +96,28 @@ class ImageCreateForm(forms.ModelForm):
         self.fields['photo'].widget.attrs['class'] = 'custom-form-field'
 
 
+class ArticleEditForm(forms.Form):
+    title = forms.CharField(max_length=255)
+    paragraphs = forms.CharField(widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['paragraphs'].label = 'Paragraphs'
+
+    def save(self, article):
+        article.title = self.cleaned_data['title']
+        article.save()
+
+        paragraphs_data = self.cleaned_data['paragraphs'].split('\n')
+        paragraphs = article.paragraphs.all()
+        for i, paragraph_data in enumerate(paragraphs_data):
+            if i < len(paragraphs):
+                paragraph = paragraphs[i]
+            else:
+                paragraph = Paragraph(article=article)
+            paragraph.text = paragraph_data.strip()
+            paragraph.save()
+
+        # Delete extra paragraphs if any
+        if len(paragraphs) > len(paragraphs_data):
+            paragraphs.filter(id__gt=len(paragraphs_data)).delete()
