@@ -8,7 +8,7 @@
 
 <h1>{{article}}</h1>
 <a href="{% url 'newsharborapp:article-select' %}">
-   <button class="custom-button-dark" style="position:absolute; margin-left:10%; top:13%;">Edit other article</button>
+   <button class="custom-button-dark" style="position:absolute; margin-left:2%; top:14%; transform:none">Select other Article</button>
 </a>
 {% if user.profile.is_editor_in_chief %}
    <h3>Changing this settings resets text</h3>
@@ -47,6 +47,13 @@
             <button class="article-edit-button"  type="submit" name="action" value="save_author">Save Author</button>
          </form>
       </div>
+      <div class="article-edit-label" style="margin-left:32%">
+         <h2>Delete Article</h2>
+         <form method="post">
+            {% csrf_token %}
+            <button class="article-edit-button" type="submit" name="action" value="delete_article">Delete</button>
+         </form>
+      </div>
    </div>
 {% endif %}
 
@@ -68,7 +75,7 @@
                {% endif %}
             {% endfor %}
             <button class="article-edit-button" type="submit" name="action" value="create_another">Add Paragraph</button>
-            <button class="article-edit-button" type="submit" name="action" value="save_paragraphs">Save Paragraphs</button>
+            <button class="article-edit-button" type="submit" name="action" value="save_paragraphs">Save Text</button>
             <button class="article-edit-button" type="reset">Reset</button>
          {% endif %}
       </form>

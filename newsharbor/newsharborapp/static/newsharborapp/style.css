@@ -100,6 +100,13 @@ h3{
     text-align: center;
 }
 
+h4{
+    color:rgb(207, 245, 255);
+    text-align: center;
+    padding: 0;
+    margin:2px;
+}
+
 a{
     text-decoration: none;
 }
@@ -297,6 +304,32 @@ label {
     left: 0; 
 }
 
+/* ______________________________ARTICLE SELECT_______________ */
+
+.article-select-label{
+    display: flex;
+    background-color: rgb(37, 37, 37);
+    color: rgb(207, 245, 255);
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+    width:90%;
+    margin-left:5%;
+}
+
+.article-select-filter-cell{
+    width:20%;
+    background-color: #f7ab39;
+    background-color: rgb(37, 37, 37);
+    border: 2px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+}
+.article-select-filter-cell select{
+    width:100%;
+    text-align: center;
+    background-color: rgb(37, 37, 37);
+    color: rgb(207, 245, 255);
+    font-size:130%;
+}
 .article-cell-box {
     display: flex; 
     align-items: center; 

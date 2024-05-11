@@ -55,17 +55,21 @@ class Article(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        if self.author and not self.access.filter(pk=self.author.pk).exists():
-            self.access.add(self.author)
+        if self.id:
+            if self.author and not self.access.filter(pk=self.author.pk).exists():
+                self.access.add(self.author)
         super().save(*args, **kwargs)
-
+    
+    def get_time_periods(self):
+        return ['published_today', 'published_last_day', 'published_last_week', 'published_last_month']
+    
     def published_today(self):
         return timezone.now().date() == self.pub_date.date()
     
     def published_last_day(self):
         return self.pub_date.date() >= timezone.now().date() - datetime.timedelta(days=1)
     
-    def published_last_weak(self):
+    def published_last_week(self):
         return self.pub_date.date() >= timezone.now().date() - datetime.timedelta(days=7)
     
     def published_last_month(self):

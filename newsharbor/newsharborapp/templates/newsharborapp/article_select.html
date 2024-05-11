@@ -6,8 +6,47 @@
     
 {% block content %}
 
-<h1>Articles</h1>
+<form method="get">
+  <div class="article-select-label">
+      <div class="article-select-filter-cell">
+          <h4>Author</h4>
+          <select name="author">
+              <option value="">All Authors</option>
+              {% for author in editors %}
+                  {% if author == selected_author %}
+                      <option value="{{ author.id }}" selected>{{ author }}</option>
+                  {% else %}
+                      <option value="{{ author.id }}">{{ author }}</option>
+                  {% endif %}
+              {% endfor %}
+          </select>
+      </div>
+      <div class="article-select-filter-cell">
+          <h4>For Display</h4>
+          <select name="display_status">
+              <option value="">All</option>
+              <option value="displayed" {% if selected_display_status == 'displayed' %} selected {% endif %}>Displayed</option>
+              <option value="hidden" {% if selected_display_status == 'hidden' %} selected {% endif %}>Hidden</option>
+          </select>
+      </div>
+      <div class="article-select-filter-cell">
+        <h4>Published</h4>
+        <select name="pub_period">
+            <option value="">Anytime</option>
+            {% for period in pub_periods %}
+                {% if period == selected_pub_period %}
+                    <option value="{{ period }}" selected>{{ period }}</option>
+                {% else %}
+                    <option value="{{ period }}">{{ period }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+  </div>
+  <button style="font-size: 100%; padding:2px; width:30%;" class="custom-button-dark" type="submit">Filter</button>
+</form>
 
+<h1>{{selected_author}} Articles</h1>
 {% for article in articles %}
 <a href="{% url 'newsharborapp:article-edit' article.id %}" class="article-cell-box">
    <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
@@ -21,5 +60,8 @@
    {% endif %}
 </a>
 {% endfor %}
-
+<form method="post">
+  {% csrf_token %}
+  <button class="custom-button-dark" type="submit" name="action" value="create_article">Create new article</button>
+</form>
 {% endblock %}

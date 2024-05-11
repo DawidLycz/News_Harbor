@@ -4,8 +4,9 @@ import json
 from io import BytesIO
 import base64
 import random
+import datetime
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from django.http.response import HttpResponse as HttpResponse
@@ -20,6 +21,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import login, logout, update_session_auth_hash
+from django.utils import timezone
 
 from django.shortcuts import render, redirect
 from django.views import View
@@ -270,13 +272,50 @@ class ArticleSelectView(generic.ListView):
             else:
                 article.photo = Image.objects.all()[0].photo
         context['articles'] = articles
+        context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
+        time_periods = articles.first().get_time_periods()
+        context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
+        selected_author = self.request.GET.get('author')
+        if selected_author:
+            context['selected_author'] = User.objects.get(id = self.request.GET.get('author'))  
+        context['selected_display_status'] = self.request.GET.get('display_status', '')
+        selected_pub_period = self.request.GET.get('pub_period')
+        if selected_pub_period:
+            context['selected_pub_period'] = selected_pub_period
         return context
     
-    def get_queryset(self) -> QuerySet[Any]:
-        articles = super().get_queryset()
-        # if True:
-        #     articles = articles.filter(for_display = False)
-        return articles
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        author_id = self.request.GET.get('author')
+        display_status = self.request.GET.get('display_status')
+        try:
+            pub_period = self.request.GET.get('pub_period').lower().replace(" ","_")
+        except AttributeError:
+            pub_period = False
+        if author_id:
+            queryset = queryset.filter(author = author_id)
+        if display_status == 'displayed':
+            queryset = queryset.filter(for_display=True)
+        elif display_status == 'hidden':
+            queryset = queryset.filter(for_display=False)
+        if pub_period:
+            if pub_period == "published_today":
+                queryset = queryset.filter(pub_date__date=timezone.now().date())
+            if pub_period == "published_last_day":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=1))
+            if pub_period == "published_last_week":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
+            if pub_period == "published_last_month":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
+        return queryset
+
+    
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        if action == "create_article":
+            article = Article.objects.create(title="New article", author=request.user)
+            return redirect(reverse_lazy('newsharborapp:article-edit', kwargs={'pk': article.id}))
+        return redirect(request.path)
 
 
 class ArticleEditView(generic.DetailView):
@@ -300,7 +339,6 @@ class ArticleEditView(generic.DetailView):
 
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
-        print ("action: ", action)
         if action == "create_lead":
             Paragraph.objects.create(article=self.get_object(), is_lead=True)
         elif action == "create_another":
@@ -319,7 +357,6 @@ class ArticleEditView(generic.DetailView):
             article.images.remove(image)
         elif action == "set_for_display":
             article = self.get_object()
-            print (article.for_display)
             article.for_display = True
             article.save()
         elif action == "set_hidden":
@@ -330,10 +367,12 @@ class ArticleEditView(generic.DetailView):
             author = request.POST.get('author')
             user = User.objects.get(id=author)
             article = self.get_object()
-            print (article.author)
             article.author = user
-            print (article.author)
             article.save()
+        elif action == "delete_article":
+            article = self.get_object()
+            article.delete()
+            return redirect(reverse_lazy('newsharborapp:article-select'))
         return redirect(request.path)
     
 class ArticleAddImageView(generic.DetailView):
