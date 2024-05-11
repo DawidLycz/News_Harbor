@@ -7,31 +7,71 @@
 {% block content %}
 
 <h1>{{article}}</h1>
+<a href="{% url 'newsharborapp:article-select' %}">
+   <button class="custom-button-dark" style="position:absolute; margin-left:10%; top:13%;">Edit other article</button>
+</a>
+{% if user.profile.is_editor_in_chief %}
+   <h3>Changing this settings resets text</h3>
+   <div style="display: flex;">
+      {% if article.for_display %}
+         <div class="article-edit-label">
+            <h2>Article is set for display</h2>
+            <form method="post">
+               {% csrf_token %}
+               <button class="article-edit-button" type="submit" name="action" value="set_hidden">Set Hidden</button>
+            </form>
+         </div>
+      {% else %}
+         <div class="article-edit-label">
+            <h2>Article is set hidden</h2>
+            <form method="post">
+               {% csrf_token %}
+               <button class="article-edit-button" type="submit" name="action" value="set_for_display">Set For display</button>
+            </form>
+         </div>
+      {% endif %}
+      <div class="article-edit-label">
+         <h2 style="opacity: 0;">This should not appear</h2>
+         <span>Author:</span>
+         <form method="post">
+            {% csrf_token %}
+            <select name="author" id="author">
+               {% for editor in editors %}
+                  {% if editor.id == article.author.id %}
+                     <option value="{{ editor.id }}" selected>{{ editor }}</option>
+                  {% else %}
+                     <option value="{{ editor.id }}">{{ editor }}</option>
+                  {% endif %}
+               {% endfor %}
+            </select>
+            <button class="article-edit-button"  type="submit" name="action" value="save_author">Save Author</button>
+         </form>
+      </div>
+   </div>
+{% endif %}
 
 <div class="article-edit-panel-box">
    <div class="article-input-box">
-      {% if not article.paragraphs.all %}
       <form method="post">
          {% csrf_token %}
-         <h2>There is no paragraphs yet.</h2>
-         <button style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="create_lead">Create lead paragraph</button>
+         <textarea class="lead-textarea" style="height:8%" name="title">{{ article.title }}</textarea>
+         {% if not article.paragraphs.all %}
+            <h2>There is no paragraphs yet.</h2>
+            <button class="article-edit-button" style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="create_lead">Create lead paragraph</button>
+         {% else %}
+            {% for paragraph in article.paragraphs.all %}
+               {% if forloop.first %}
+                  <textarea class="lead-textarea" name="paragraph{{ paragraph.id }}" >{{ paragraph.text }}</textarea>
+               {% else %}
+                  <textarea class="common-textarea" name="paragraph{{ paragraph.id }}">{{ paragraph.text }}</textarea>
+                  <button class="article-edit-button" style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="delete_paragraph_{{paragraph.id}}">Delete Paragraph</button>
+               {% endif %}
+            {% endfor %}
+            <button class="article-edit-button" type="submit" name="action" value="create_another">Add Paragraph</button>
+            <button class="article-edit-button" type="submit" name="action" value="save_paragraphs">Save Paragraphs</button>
+            <button class="article-edit-button" type="reset">Reset</button>
+         {% endif %}
       </form>
-      {% else %}
-      <form method="post">
-         {% csrf_token %}
-         {% for paragraph in article.paragraphs.all %}
-            {% if forloop.first %}
-               <textarea class="lead-textarea" name="paragraph{{ paragraph.id }}" >{{ paragraph.text }}</textarea>
-            {% else %}
-               <textarea class="common-textarea" name="paragraph{{ paragraph.id }}">{{ paragraph.text }}</textarea>
-               <button style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="delete_paragraph_{{paragraph.id}}">Delete Paragraph</button>
-            {% endif %}
-         {% endfor %}
-         <button type="submit" name="action" value="create_another">Add Paragraph</button>
-         <button type="submit" name="action" value="save_paragraphs">Save Paragraphs</button>
-         <button type="reset">Reset</button>
-      </form>
-      {% endif %}
    </div>
 
    <div class="article-image-box">
@@ -46,9 +86,10 @@
                </button>
          {% endfor %}
          <a href="{% url 'newsharborapp:article-add-image' article.id %}">
-            <button class="article-image-box-click-button" type="button">Assing new image</button>
+            <button class="article-edit-button" class="article-image-box-click-button" type="button">Assing new image</button>
          </a>
       </form>
    </div>
 </div>
 {% endblock %}
+

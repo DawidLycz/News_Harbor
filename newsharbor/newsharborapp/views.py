@@ -6,6 +6,7 @@ import base64
 import random
 
 from django.db.models import Prefetch
+from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import get_object_or_404
@@ -261,7 +262,7 @@ class ArticleSelectView(generic.ListView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        articles = Article.objects.all()
+        articles = self.get_queryset()
         for article in articles:
             photos = article.images.all()
             if photos:
@@ -270,6 +271,12 @@ class ArticleSelectView(generic.ListView):
                 article.photo = Image.objects.all()[0].photo
         context['articles'] = articles
         return context
+    
+    def get_queryset(self) -> QuerySet[Any]:
+        articles = super().get_queryset()
+        # if True:
+        #     articles = articles.filter(for_display = False)
+        return articles
 
 
 class ArticleEditView(generic.DetailView):
@@ -278,33 +285,55 @@ class ArticleEditView(generic.DetailView):
     template_name = 'newsharborapp/article_edit.html'
     context_object_name = 'article'
 
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
+        return context
+
     def save_all(self, request, *args, **kwargs):
+        article = self.get_object()
+        article.title = request.POST.get('title')
+        article.save()
         for paragraph in self.get_object().paragraphs.all():
             paragraph.text = request.POST.get(f'paragraph{paragraph.id}')
             paragraph.save()
 
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
+        print ("action: ", action)
         if action == "create_lead":
             Paragraph.objects.create(article=self.get_object(), is_lead=True)
-
         elif action == "create_another":
             self.save_all(request, *args, **kwargs)
             Paragraph.objects.create(article=self.get_object(), is_lead=False)
-
         elif action == "save_paragraphs":
             self.save_all(request, *args, **kwargs)
-
         elif "delete_paragraph" in action:
             self.save_all(request, *args, **kwargs)
             pk = action.rsplit("_")[-1]
-            Paragraph.objects.get(pk=pk).delete()
-        
+            Paragraph.objects.get(pk=pk).delete()        
         elif "delete_image" in action:
             pk = action.rsplit("_")[-1]
             article = self.get_object()
             image = Image.objects.get(pk=pk)
             article.images.remove(image)
+        elif action == "set_for_display":
+            article = self.get_object()
+            print (article.for_display)
+            article.for_display = True
+            article.save()
+        elif action == "set_hidden":
+            article = self.get_object()
+            article.for_display = False
+            article.save()
+        elif action == "save_author":
+            author = request.POST.get('author')
+            user = User.objects.get(id=author)
+            article = self.get_object()
+            print (article.author)
+            article.author = user
+            print (article.author)
+            article.save()
         return redirect(request.path)
     
 class ArticleAddImageView(generic.DetailView):

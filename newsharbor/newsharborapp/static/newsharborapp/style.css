@@ -350,6 +350,55 @@ label {
     width:100%;
 }
 
+.article-edit-label{
+    position: relative;
+    width: 20%;
+    margin-left:2%;
+    border: 5px inset rgb(15, 15, 15);
+    background-color: rgb(37, 37, 37); 
+    border-radius: 5px;
+}
+
+.article-edit-label span{
+    position: absolute;
+    left:10%;
+    top:19%;
+    color:rgb(207, 245, 255);
+    font-size: 200%;
+    font-weight: bold;
+}
+
+.article-edit-label select{
+    position: absolute;
+    left:40%;
+    top:19%;
+    font-size: 200%;
+    background-color: #0e0e0e;
+    color:rgb(207, 245, 255);
+}
+
+.article-edit-button{
+    margin:1%;
+    width: 30%;
+    margin-bottom:30px;
+    font-size: 30px;
+    font-weight: bold;
+    background-color:  rgb(182, 180, 180);
+    border: 5px inset rgb(216, 216, 216);
+    color: #1b1b1b;
+}
+
+.article-edit-button:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    background: #f7ab39;
+    cursor: pointer;
+}
+
+.article-edit-label .article-edit-button{
+    width:100%;
+    margin:0;
+}
+
 .article-input-box{
     display: inline-block;
     border: 5px inset rgb(15, 15, 15);
@@ -382,16 +431,6 @@ label {
     font-weight: bold;
 }
 
-.article-input-box form button{
-    width: 30%;
-    margin-bottom: 30px;
-    font-size: 30px;
-    background-color:  rgb(221, 221, 221);
-    border: 5px inset rgb(216, 216, 216);
-    color: #0e0e0e;
-    margin: 1%;
-}
-
 .article-input-box form button:hover{
     border: 5px inset rgb(241, 120, 39); 
     background: #f7ab39;
@@ -406,6 +445,13 @@ label {
     border-radius: 5px;
     width:33%;
     margin-top:2%;
+}
+
+.article-image-box .article-edit-button{
+    margin-left: 50%;
+    margin-top:5%;
+    transform: translate(-50%);
+    width: 90%;
 }
 
 .article-image-box img{
@@ -431,18 +477,3 @@ label {
     cursor: pointer;  
 }
 
-.article-image-box-click-button{
-    font-size: 30px;
-    background-color:  rgb(221, 221, 221);
-    border: 5px inset rgb(216, 216, 216);
-    color: #0e0e0e;
-    margin: 1%;
-    margin-left: 50%;
-    transform:translate(-50%)
-}
-
-.article-image-box button:hover{
-    border: 5px inset rgb(241, 120, 39); 
-    background: #f7ab39;
-    cursor: pointer;  
-}
