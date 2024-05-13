@@ -6,6 +6,47 @@
     
 {% block content %}
 
-cyk
+<h5>{{article.title}}</h5>
+{% if lead_paragraph %}
+    <p style="text-align: center;" class="article-lead-paragraph">{{lead_paragraph.title}}</p>
+    <div class="article-lead-image-box">
+        <img src="{{ article.lead_photo.url }}" alt="Image">
+    </div>
+    <p class="article-lead-paragraph">{{lead_paragraph.text}}</p>
+{% endif %}
+
+{% for link in chain_head %}
+    {% if link.is_left %}
+        <div class="article-chain-link">
+            <div class="c-text-box">
+            <h2>{{link.paragraph.title}}</h2>
+            <p>{{link.paragraph.text}}</p>
+            </div>
+            <div class="c-image-box">
+                <img src="{{ link.img.photo.url }}" alt="Image">
+            </div>
+        </div>
+    {% else %}
+        <div class="article-chain-link-mirror">
+            <div class="c-image-box">
+                <img src="{{ link.img.photo.url }}" alt="Image">
+            </div>
+            <div class="c-text-box">
+                <h2>{{link.paragraph.title}}</h2>
+                <p>{{link.paragraph.text}}</p>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+
+{% for p in chain_tail %}
+    <div class="article-chain-tail-box">
+        <h2>{{p.title}}</h2>
+        <p>{{p.text}}</p>
+    </div>
+{% endfor %}
+
+<div class="article-author-box">Author: {{article.author}}</div>
+
 
 {% endblock %}

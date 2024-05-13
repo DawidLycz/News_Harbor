@@ -1,4 +1,5 @@
 import datetime
+from typing import Iterable
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.dispatch import receiver
@@ -45,8 +46,9 @@ class Article(models.Model):
     for_display = models.BooleanField(default=False)
     popularity = models.IntegerField(default=0)
     pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True)
-    access = models.ManyToManyField(User, related_name="has_access", blank=True, null=True)
+    access = models.ManyToManyField(User, related_name="has_access", blank=True)
     access_required = models.BooleanField(default=False)
+
 
     class Meta:
         ordering = ['-pub_date']
@@ -77,6 +79,7 @@ class Article(models.Model):
 
 
 class Paragraph(models.Model):
+    title = models.CharField(max_length=255, default="paragraph")
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="paragraphs")
     text = models.TextField(default='', blank=True)
     is_lead = models.BooleanField(default=False)
@@ -86,6 +89,12 @@ class Paragraph(models.Model):
             models.UniqueConstraint(fields=['article', 'is_lead'], condition=models.Q(is_lead=True), name='unique_lead_paragraph'),
         ]
 
+    def save(self, *args, **kwargs) -> None:
+        if not self.title:
+            text_first_sentence = self.text.split(".", 1)[0]
+            self.title = text_first_sentence
+        super().save(*args, **kwargs)
+
     def clean(self):
         if self.is_lead and self.article.paragraphs.filter(is_lead=True).exists():
             raise ValidationError('There can only be one lead paragraph per article.')
@@ -93,7 +102,7 @@ class Paragraph(models.Model):
 class Image(models.Model):
 
     name = models.CharField(max_length=255, default="image", blank=True)
-    articles = models.ManyToManyField(Article, related_name="images", blank=True, null=True)
+    articles = models.ManyToManyField(Article, related_name="images", blank=True)
     photo = models.ImageField(upload_to='article_images/')
     pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True, blank=True)
     
@@ -102,11 +111,8 @@ class Image(models.Model):
         return self.name
     
     def get_name(self):
-        prefix = "image_"
-        if self.articles.exists():
-            name = prefix + self.articles.first().title.lower().replace(" ", "_")
-        elif self.pub_date:
-            name = prefix + str(self.pub_date)
+        if self.pub_date:
+            name = "image_" + str(self.pub_date)
         else:
             name = "image"
         return name

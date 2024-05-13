@@ -61,16 +61,20 @@
    <div class="article-input-box">
       <form method="post">
          {% csrf_token %}
-         <textarea class="lead-textarea" style="height:8%" name="title">{{ article.title }}</textarea>
+         <h3>Title:</h3>
+         <textarea class="lead-textarea" style="height:8%; border:5px inset rgb(15, 15, 15); text-align: center;" name="title">{{ article.title }}</textarea>
+         <h3>Text:</h3>
          {% if not article.paragraphs.all %}
             <h2>There is no paragraphs yet.</h2>
             <button class="article-edit-button" style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="create_lead">Create lead paragraph</button>
          {% else %}
             {% for paragraph in article.paragraphs.all %}
                {% if forloop.first %}
-                  <textarea class="lead-textarea" name="paragraph{{ paragraph.id }}" >{{ paragraph.text }}</textarea>
+                  <textarea class="lead-textarea" style="height:6%;" name="paragraph_title_{{ paragraph.id }}" >{{ paragraph.title }}</textarea>
+                  <textarea class="lead-textarea" name="paragraph_text_{{ paragraph.id }}" >{{ paragraph.text }}</textarea>
                {% else %}
-                  <textarea class="common-textarea" name="paragraph{{ paragraph.id }}">{{ paragraph.text }}</textarea>
+                  <textarea class="common-textarea" style="height:6%;" name="paragraph_title_{{ paragraph.id }}">{{ paragraph.title }}</textarea>
+                  <textarea class="common-textarea" name="paragraph_text_{{ paragraph.id }}">{{ paragraph.text }}</textarea>
                   <button class="article-edit-button" style="margin-left: 50%; transform: translate(-50%);" type="submit" name="action" value="delete_paragraph_{{paragraph.id}}">Delete Paragraph</button>
                {% endif %}
             {% endfor %}

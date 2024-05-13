@@ -1,13 +1,6 @@
 from typing import Any
-import csv
-import json
-from io import BytesIO
-import base64
-import random
 import datetime
 
-from django.db.models import Prefetch, Q
-from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import get_object_or_404
@@ -24,7 +17,6 @@ from django.contrib.auth import login, logout, update_session_auth_hash
 from django.utils import timezone
 
 from django.shortcuts import render, redirect
-from django.views import View
 
 from .models import Article, Image, Paragraph, Profile, Comment
 from .forms import *
@@ -34,6 +26,7 @@ class IndexView(generic.ListView):
     model = Article
     template_name = 'newsharborapp/index.html'
     context_object_name = 'articles'
+
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -50,11 +43,47 @@ class IndexView(generic.ListView):
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         return super().get(request, *args, **kwargs)
     
+class ChainLink:
+        '''This is spacial class to colect objects Image and Paragraph into one object, and allow to switch their order'''
+        def __init__(self, img: Image, paragraph: Paragraph, is_left: bool):
+
+            self.img = img
+            self.paragraph = paragraph
+            self.is_left = is_left
+        def __str__(self) -> str:
+
+            return (self.img, self.paragraph, self.is_left)
+
 class ArticleDetailView(generic.DetailView):
 
     model = Article
     template_name = 'newsharborapp/article.html'
-    context_object_name = 'article.html'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        article = self.get_object()
+        chain_head, chain_tail = [], []
+        paragraphs = article.paragraphs.all()
+        if paragraphs:
+            context['lead_paragraph'] = paragraphs.filter(is_lead=True)[0]
+        images = article.images.all()
+        num_paragraphs, num_images = len(paragraphs), len(images)
+        if not num_paragraphs:
+            chain_tail = ["There is no text for this article yet."]
+        else:
+            index = 0
+            for index, (p, img) in enumerate(zip(paragraphs[1:], images[1:])):
+                chain_head.append(ChainLink(img=img, paragraph=p, is_left=index % 2 == 0))
+            if num_paragraphs > num_images:
+                chain_tail = [p for p in paragraphs[index:]]
+            elif num_paragraphs < num_images:
+                context['gallery'] = images
+        
+        article.lead_photo = images[0].photo if images else Image.objects.all()[0].photo
+        context['article'] = article
+        context['chain_head'] = chain_head
+        context['chain_tail'] = chain_tail
+        return context
 
 
 ############### Authorisation ##############
@@ -155,7 +184,9 @@ class UserChangePasswordView(FormView):
     def get_success_url(self) -> str:
         return reverse_lazy('newsharborapp:profile', kwargs={'pk': self.request.user.profile.id})
 
+
 ############### Work ##############
+
 
 class EditorPermissionMixin(PermissionRequiredMixin):
     permission_required = 'newsharborapp.Editor'
@@ -172,7 +203,8 @@ class EditorPanelView(generic.TemplateView):
         if not self.request.user.profile.is_editor:
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
-    
+
+
 class ImageListView(generic.ListView):
 
     model = Image
@@ -185,6 +217,7 @@ class ImageListView(generic.ListView):
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
     
+
 class ImageDetailView(generic.DetailView):
 
     model = Image
@@ -196,6 +229,7 @@ class ImageDetailView(generic.DetailView):
         if not self.request.user.profile.is_editor:
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
+
 
 class ImageRenameView(generic.UpdateView):
 
@@ -216,6 +250,7 @@ class ImageRenameView(generic.UpdateView):
         form.save()
         self.get_object().id
         return redirect(reverse_lazy('newsharborapp:image', kwargs={'pk': self.get_object().id}))
+
 
 class ImageAssignView(generic.UpdateView):
 
@@ -250,11 +285,13 @@ class ImageCreateView(generic.CreateView):
     template_name = 'newsharborapp/image_create.html'
     success_url = reverse_lazy('newsharborapp:images')
 
+
 class ImageDeleteView(generic.DeleteView):
 
     model = Image
     template_name = 'newsharborapp/image_delete.html'
     success_url = reverse_lazy('newsharborapp:images')
+
 
 class ArticleSelectView(generic.ListView):
 
@@ -273,7 +310,7 @@ class ArticleSelectView(generic.ListView):
                 article.photo = Image.objects.all()[0].photo
         context['articles'] = articles
         context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
-        time_periods = articles.first().get_time_periods()
+        time_periods = Article.objects.first().get_time_periods()
         context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
         selected_author = self.request.GET.get('author')
         if selected_author:
@@ -334,16 +371,17 @@ class ArticleEditView(generic.DetailView):
         article.title = request.POST.get('title')
         article.save()
         for paragraph in self.get_object().paragraphs.all():
-            paragraph.text = request.POST.get(f'paragraph{paragraph.id}')
+            paragraph.title = request.POST.get(f'paragraph_title_{paragraph.id}')
+            paragraph.text = request.POST.get(f'paragraph_text_{paragraph.id}')
             paragraph.save()
 
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
         if action == "create_lead":
-            Paragraph.objects.create(article=self.get_object(), is_lead=True)
+            Paragraph.objects.create(title="Lead Paragraph...", article=self.get_object(), is_lead=True)
         elif action == "create_another":
             self.save_all(request, *args, **kwargs)
-            Paragraph.objects.create(article=self.get_object(), is_lead=False)
+            Paragraph.objects.create(title="Next Paragraph...", article=self.get_object(), is_lead=False)
         elif action == "save_paragraphs":
             self.save_all(request, *args, **kwargs)
         elif "delete_paragraph" in action:
@@ -374,7 +412,8 @@ class ArticleEditView(generic.DetailView):
             article.delete()
             return redirect(reverse_lazy('newsharborapp:article-select'))
         return redirect(request.path)
-    
+
+
 class ArticleAddImageView(generic.DetailView):
 
     model = Article
