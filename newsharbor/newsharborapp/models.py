@@ -44,7 +44,8 @@ class Article(models.Model):
     title = models.CharField(max_length=255)
     author = models.ForeignKey(User, on_delete=models.SET_DEFAULT, default=None, null=True)
     for_display = models.BooleanField(default=False)
-    popularity = models.IntegerField(default=0)
+    unique_visitors = models.ManyToManyField(User, related_name="viewed_articles", blank=True)
+    fans = models.ManyToManyField(User, related_name="liked_articles", blank=True)
     pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True)
     access = models.ManyToManyField(User, related_name="has_access", blank=True)
     access_required = models.BooleanField(default=False)
@@ -61,6 +62,9 @@ class Article(models.Model):
             if self.author and not self.access.filter(pk=self.author.pk).exists():
                 self.access.add(self.author)
         super().save(*args, **kwargs)
+    
+    def get_date(self):
+        return self.pub_date.strftime('%#m.%d.%Y %H:%M')
     
     def get_time_periods(self):
         return ['published_today', 'published_last_day', 'published_last_week', 'published_last_month']
@@ -130,11 +134,13 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="comments")
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments', default=1)
     text = models.TextField(default='', blank=True)
-    votes_up = models.IntegerField(default=0)
-    votes_down = models.IntegerField(default=0)
+    pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True, blank=True, null=True)
+    fans = models.ManyToManyField(User, related_name="liked_comments", blank=True)
+    haters = models.ManyToManyField(User, related_name="disliked_comments", blank=True)
+
 
     def __str__(self):
         return self.text
     
-    def check_sentiment(self):
-        return self.votes_up - self.votes_down
+    def get_date(self):
+        return self.pub_date.strftime('%#m.%d.%Y %H:%M')

@@ -46,7 +46,54 @@
     </div>
 {% endfor %}
 
-<div class="article-author-box">Author: {{article.author}}</div>
+<form method="post">
+    {% csrf_token %}
+    <div class="article-author-box">
+        <span>Views: {{visits}}</span>
+        <span style="margin-left: 5%;">Likes: {{likes}}</span>
+        <span style="float:right;">Author: {{article.author}}</span>
+        <span style="float:right; margin-right:5%;">Published: {{article.get_date}}</span>
+        {% if is_fan %}
+            <button button="submit" name="action" value="dislike_article">Dislike</button>
+        {% else %}
+            <button button="submit" name="action" value="like_article">Like</button>
+        {% endif %}
+    </div>
+</form>
+
+<h1>Comments section:</h1>
+
+{% if article.comments.all %}:
+    {% for comment in comments %}
+        <form method="post">
+        {% csrf_token %}
+            <div class="article-comment-box">
+                <div class="article-comment-box-label">
+                    <span style="margin-left:2%;">Published: {{comment.get_date}} </span>
+                    {% if comment.author == user or user.profile.is_editor%}
+                        <button name="action" value="delete_comment_{{comment.id}}" type="submit" style="transform: translateX(-50%)">Delete</button>
+                    {% else %}
+                        <button name="action" value="hate_comment_{{comment.id}}" type="submit">Dislike: {{comment.haters_num}}</button>
+                        <button name="action" value="like_comment_{{comment.id}}" type="submit" style="transform: translateX(+20%)">Like: {{comment.fans_num}}</button>
+                    {% endif %}
+                    <span style="float:right; margin-right:2%;">Author: {{comment.author}}</span>
+                </div>
+                <p style="margin-left:0.5%;">{{comment}}</p>
+            </div>
+        </form>
+    {% endfor %}
+{% else %}
+<h2>There is no comments yet</h2>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <div class="article-comment-input-box">
+        <h4>Leave a comment</h4>
+        <textarea name="user_comment"></textarea>
+        <button button="submit" style="margin-left:50%; transform:translateX(-50%)" class="article-edit-button" name="action" value="publish_comment">Publish</button>
+    </div>
+</form>
 
 
 {% endblock %}

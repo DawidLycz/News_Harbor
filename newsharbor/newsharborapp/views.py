@@ -44,7 +44,7 @@ class IndexView(generic.ListView):
         return super().get(request, *args, **kwargs)
     
 class ChainLink:
-        '''This is spacial class to colect objects Image and Paragraph into one object, and allow to switch their order'''
+        '''This is spacial class to collect objects Image and Paragraph into one object, and allow to switch their order'''
         def __init__(self, img: Image, paragraph: Paragraph, is_left: bool):
 
             self.img = img
@@ -62,8 +62,14 @@ class ArticleDetailView(generic.DetailView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         article = self.get_object()
+        user = self.request.user
+        comments = Comment.objects.filter(article=article)
         chain_head, chain_tail = [], []
         paragraphs = article.paragraphs.all()
+        if comments:
+            for comment in comments:
+                comment.fans_num = len(comment.fans.all())
+                comment.haters_num = len(comment.haters.all())
         if paragraphs:
             context['lead_paragraph'] = paragraphs.filter(is_lead=True)[0]
         images = article.images.all()
@@ -71,19 +77,63 @@ class ArticleDetailView(generic.DetailView):
         if not num_paragraphs:
             chain_tail = ["There is no text for this article yet."]
         else:
-            index = 0
-            for index, (p, img) in enumerate(zip(paragraphs[1:], images[1:])):
+            index = 1
+            for p, img in zip(paragraphs[1:], images[1:]):
                 chain_head.append(ChainLink(img=img, paragraph=p, is_left=index % 2 == 0))
+                index += 1
             if num_paragraphs > num_images:
                 chain_tail = [p for p in paragraphs[index:]]
             elif num_paragraphs < num_images:
                 context['gallery'] = images
         
         article.lead_photo = images[0].photo if images else Image.objects.all()[0].photo
+        if article.unique_visitors.all():
+            context['visits'] = len(article.unique_visitors.all())
+        else:
+            context['visits'] = 0
+        if article.fans.all():
+            context['likes'] = len(article.fans.all())
+        else:
+            context['likes'] = 0
+        context['is_fan'] = article.fans.filter(pk=user.pk).exists()
         context['article'] = article
+        context['comments'] = comments
         context['chain_head'] = chain_head
         context['chain_tail'] = chain_tail
         return context
+    
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        user = self.request.user
+        article = self.get_object()
+        if user.is_authenticated:
+            article.unique_visitors.add(user)
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        article = self.get_object()
+        user = self.request.user
+        if action == "publish_comment":
+            text = request.POST.get('user_comment')
+            Comment.objects.create(author=user, article=article, text=text)
+        if action == "like_article":
+            article.fans.add(user)
+        if action == "dislike_article":
+            article.fans.remove(user)
+        if "like_comment" in action:
+            pk = action.rsplit("_", maxsplit=1)[-1]
+            comment = Comment.objects.get(pk=pk)
+            comment.fans.add(user)
+        if "hate_comment" in action:
+            pk = action.rsplit("_", maxsplit=1)[-1]
+            comment = Comment.objects.get(pk=pk)
+            comment.haters.add(user)
+        if "delete_comment" in action:
+            pk = action.rsplit("_", maxsplit=1)[-1]
+            comment = Comment.objects.get(pk=pk)
+            comment.delete()
+            
+        return redirect(request.path)
 
 
 ############### Authorisation ##############

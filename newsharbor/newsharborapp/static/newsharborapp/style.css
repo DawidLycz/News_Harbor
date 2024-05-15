@@ -1,9 +1,10 @@
 /* _______________________________BASE__________________________________________ */
 
 header {
-    background: #202020 url("images/header_backgroundx.jpg") repeat;
+    background: #202020 url("images/header_background_x.jpg") repeat;
+    background-size: cover;
     color: #fff;
-    padding-top:20px;
+    padding-top: 20px;
     padding-bottom: 20px;
     border-radius: 10px;
     border: 5px inset rgb(15, 15, 15); 
@@ -167,8 +168,8 @@ h5{
 }
 
 .article-lead-image-box{
-    width:80%;
-    margin-left:10%;
+    position:inherit;
+    width:100%;
 
 }
 
@@ -177,9 +178,9 @@ h5{
     border: 5px inset rgb(15, 15, 15); 
     border-radius: 10px;
     align-items: center;
-    max-width: 100%;
+    max-width: 80%;
     margin-left:50%;
-    transform: translateX(-50%);
+    transform:translateX(-50%);
 }
 
 .article-lead-paragraph{
@@ -187,13 +188,15 @@ h5{
     border: 5px inset rgb(15, 15, 15); 
     border-radius: 10px;
     width: 80%;
-    padding:1%;
     margin-left:10%;
+    margin-right:10%;
     border-radius: 10px;
     color:rgb(207, 245, 255);
     font-size: 250%;
     font-family: 'TimNew Roman', Times, serif;
     font-weight: bold;
+    padding-top: 10px;
+    padding-bottom: 10px;
 
 }
 .article-chain-link{
@@ -210,10 +213,11 @@ h5{
 }
 
 .article-chain-link .c-text-box{
-    width:60%;
+    width: 60%;
     background-color: rgb(37, 37, 37);
     border: 5px inset rgb(15, 15, 15); 
     border-radius: 10px;
+    font-size:120%;
 }
 
 .article-chain-link .c-image-box{
@@ -249,6 +253,8 @@ h5{
     border: 5px inset rgb(15, 15, 15); 
     border-radius: 10px;
     margin-left:2%;
+    font-size:120%;
+
 }
 
 .article-chain-link-mirror .c-image-box{
@@ -277,18 +283,95 @@ h5{
 }
 
 .article-author-box{
-    width:96%;
-    margin:2%;
+    position:relative;
+    width: 96%;
+    margin: 2%;
     background-color: rgb(37, 37, 37);
     border: 5px inset rgb(15, 15, 15); 
     border-radius: 10px;
     color:rgb(207, 245, 255);
-    text-align: right;
     font-size: 200%;
     padding:10px;
+
+}
+
+.article-author-box button{
+    position:absolute;
+    top:10%;
+    left:50%;
+    height:80%;
+    width:20%;
+    transform:translateX(-50%);
+    background-color: rgb(37, 37, 37);
+    border: 2px inset rgb(15, 15, 15); 
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+    font-size: 120%;
+}
+.article-author-box button:hover{
+    background-color: #f7ab39;
+    cursor: pointer;
 }
 
 
+.article-comment-input-box{
+    width:80%;
+    margin-left: 10%;
+    background-color: rgb(37, 37, 37);
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+}
+
+.article-comment-input-box textarea{
+    width: 96%;
+    margin: 2%;
+    background-color: rgb(61, 61, 61);
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+    font-size: 150%;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.article-comment-box{
+    position: "relative";
+    width:96%;
+    margin:2%;
+    background-color: rgb(49, 49, 49);
+    border: 5px inset rgb(15, 15, 15); 
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+    font-size: 150%;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.article-comment-box-label{
+    position: relative;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom: 5px inset rgb(15, 15, 15); 
+    width: 100%;
+    background-color: rgb(37, 37, 37);
+}
+
+.article-comment-box-label button{
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    height: 80%;
+    width: 10%;
+    transform: translateX(-120%);
+    background-color: rgb(37, 37, 37);
+    border: 2px inset rgb(15, 15, 15); 
+    border-radius: 10px;
+    color:rgb(207, 245, 255);
+    font-weight: bold;
+}
+.article-comment-box-label button:hover{
+    background-color: #f7ab39;
+    cursor: pointer;
+}
 /* _____________________________AUTHORISATION____________________________________________ */
 
 .form-box{
