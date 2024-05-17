@@ -8,6 +8,7 @@ app_name = "newsharborapp"
 
 urlpatterns = [
     path('', views.IndexView.as_view(), name='home'),
+    path('articles/', views.ArticleListView.as_view(), name='articles'),
     path('articles/<int:pk>/', views.ArticleDetailView.as_view(), name='article'),
     #### Authorisation ####
     path('login/', views.CustomLoginView.as_view(), name='login'),

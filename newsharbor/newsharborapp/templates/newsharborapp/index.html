@@ -5,6 +5,14 @@
 {% endblock %}
     
 {% block content %}
+
+<a href="{% url 'newsharborapp:article' main_article.id %}" class="big-news-box"> 
+    <img src="{{ main_article.photo.url }}" alt="{{ main_article.photo }}">
+    <div class="caption">
+        {{ main_article.title }}
+    </div>
+</a> 
+
 {% for article in articles %}
 
 <a href="{% url 'newsharborapp:article' article.id %}" class="news-box"> 
@@ -15,5 +23,10 @@
 </a> 
 
 {% endfor %}
+
+<p></p>
+<a href="{% url 'newsharborapp:articles' %}">
+    <button class="custom-button-dark">See more articles</button>
+</a>
 
 {% endblock %}

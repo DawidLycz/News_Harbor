@@ -13,7 +13,7 @@
           <select name="author">
               <option value="">All Authors</option>
               {% for author in editors %}
-                  {% if author == selected_author %}
+                  {% if author.id|stringformat:"s" == selected_author %}
                       <option value="{{ author.id }}" selected>{{ author }}</option>
                   {% else %}
                       <option value="{{ author.id }}">{{ author }}</option>
@@ -46,7 +46,6 @@
   <button style="font-size: 100%; padding:2px; width:30%;" class="custom-button-dark" type="submit">Filter</button>
 </form>
 
-<h1>{{selected_author}} Articles</h1>
 {% for article in articles %}
 <a href="{% url 'newsharborapp:article-edit' article.id %}" class="article-cell-box">
    <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
@@ -60,6 +59,25 @@
    {% endif %}
 </a>
 {% endfor %}
+
+<div class="pagination">
+    <span class="step-links">
+        {% if articles.has_previous %}
+            <a href="?page=1{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">&laquo; first</a>
+            <a href="?page={{ articles.previous_page_number }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ articles.number }} of {{ articles.paginator.num_pages }}.
+        </span>
+
+        {% if articles.has_next %}
+            <a href="?page={{ articles.next_page_number }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">next</a>
+            <a href="?page={{ articles.paginator.num_pages }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
 <form method="post">
   {% csrf_token %}
   <button class="custom-button-dark" type="submit" name="action" value="create_article">Create new article</button>

@@ -1,16 +1,48 @@
 {% extends 'newsharborapp/base.html' %}
 
 {% block title %}
-   Images
+    Articles {{page}}
 {% endblock %}
     
 {% block content %}
+<form method="get">
+  <div class="article-select-label">
+      <div class="article-select-filter-cell">
+          <h4>Author</h4>
+          <select name="author">
+              <option value="">All Authors</option>
+              {% for author in editors %}
+                  {% if author.id|stringformat:"s" == selected_author %}
+                      <option value="{{ author.id }}" selected>{{ author }}</option>
+                  {% else %}
+                      <option value="{{ author.id }}">{{ author }}</option>
+                  {% endif %}
+              {% endfor %}
+          </select>
+      </div>
 
-{% for image in page_obj %}
-<a href="{% url 'newsharborapp:image' image.id %}" class="image-box"> 
-    <img src="{{ image.photo.url }}" alt="{{ image.photo }}">
+      <div class="article-select-filter-cell">
+        <h4>Published</h4>
+        <select name="pub_period">
+            <option value="">Anytime</option>
+            {% for period in pub_periods %}
+                {% if period == selected_pub_period %}
+                    <option value="{{ period }}" selected>{{ period }}</option>
+                {% else %}
+                    <option value="{{ period }}">{{ period }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+  </div>
+  <button style="font-size: 100%; padding:2px; width:30%;" class="custom-button-dark" type="submit">Filter</button>
+</form>
+
+{% for article in articles %}
+<a href="{% url 'newsharborapp:article' article.id %}" class="news-box"> 
+    <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
     <div class="caption">
-        {{ image.name }}
+        {{ article.title }}
     </div>
 </a> 
 {% endfor %}
@@ -32,9 +64,5 @@
         {% endif %}
     </span>
 </div>
-
-<a href="{% url 'newsharborapp:image-create' %}">
-    <button class="custom-button-dark" style="width: 30%;" type="button">Add New Image</button>
-</a>
 
 {% endblock %}

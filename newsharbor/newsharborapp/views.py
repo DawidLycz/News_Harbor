@@ -1,6 +1,8 @@
 from typing import Any
 import datetime
 
+from django.db.models.query import QuerySet
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpRequest
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import get_object_or_404
@@ -21,6 +23,14 @@ from django.shortcuts import render, redirect
 from .models import Article, Image, Paragraph, Profile, Comment
 from .forms import *
 
+
+class EditorOnlyMixin:
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.profile.is_editor:
+            print ("Acces denied")
+            return redirect(reverse_lazy('newsharborapp:home'))
+
+
 class IndexView(generic.ListView):
     
     model = Article
@@ -29,20 +39,68 @@ class IndexView(generic.ListView):
 
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+
         context = super().get_context_data(**kwargs)
-        articles = Article.objects.filter(for_display=True)
+        articles = Article.objects.filter(for_display=True)[:7]
         for article in articles:
             photos = article.images.all()
             if photos:
                 article.photo = photos[0].photo
             else:
                 article.photo = Image.objects.all()[0].photo
-        context['articles'] = articles
+        context['main_article'] = articles[0]
+        context['articles'] = articles[1:]
         return context
     
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         return super().get(request, *args, **kwargs)
     
+
+class ArticleListView(generic.ListView):
+    model = Article
+    template_name = 'newsharborapp/article-list.html'
+    context_object_name = 'articles'
+    paginate_by = 4  
+
+    def get_queryset(self):
+        queryset = Article.objects.filter(for_display=True)
+        author_id = self.request.GET.get('author')
+        pub_period = self.request.GET.get('pub_period', "").lower().replace(" ","_")
+        
+        if author_id:
+            queryset = queryset.filter(author_id=author_id)
+        if pub_period:
+            if pub_period == "published_today":
+                queryset = queryset.filter(pub_date__gte=timezone.now().date())
+            if pub_period == "published_last_day":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=1))
+            if pub_period == "published_last_week":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
+            if pub_period == "published_last_month":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
+        
+        for article in queryset:
+            photos = article.images.all()
+            if photos.exists():
+                article.photo = photos[0].photo
+            else:
+                article.photo = Image.objects.first().photo if Image.objects.exists() else None
+                
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
+        context['selected_author'] = self.request.GET.get('author', '')
+        context['selected_display_status'] = self.request.GET.get('display_status', '')
+        context['selected_pub_period'] = self.request.GET.get('pub_period', '')
+        time_periods = Article.objects.first().get_time_periods()
+        context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
+        page = context['page_obj']
+        context['articles'] = page
+        return context
+
+
 class ChainLink:
         '''This is spacial class to collect objects Image and Paragraph into one object, and allow to switch their order'''
         def __init__(self, img: Image, paragraph: Paragraph, is_left: bool):
@@ -53,6 +111,7 @@ class ChainLink:
         def __str__(self) -> str:
 
             return (self.img, self.paragraph, self.is_left)
+
 
 class ArticleDetailView(generic.DetailView):
 
@@ -124,10 +183,12 @@ class ArticleDetailView(generic.DetailView):
             pk = action.rsplit("_", maxsplit=1)[-1]
             comment = Comment.objects.get(pk=pk)
             comment.fans.add(user)
+            comment.haters.remove(user)
         if "hate_comment" in action:
             pk = action.rsplit("_", maxsplit=1)[-1]
             comment = Comment.objects.get(pk=pk)
             comment.haters.add(user)
+            comment.fans.remove(user)
         if "delete_comment" in action:
             pk = action.rsplit("_", maxsplit=1)[-1]
             comment = Comment.objects.get(pk=pk)
@@ -200,16 +261,12 @@ class ProfileDetailView(generic.DetailView):
         return super().get(request, *args, **kwargs)
 
 
-class UserEditView(LoginRequiredMixin, UpdateView):
+class UserEditView(UpdateView):
     model = User
     form_class = CustomUserEditForm
     template_name = 'authorisation/user_edit.html'
-    
-    def get(self, request: HttpRequest, *args: str, **kwargs: Any) -> HttpResponse:
-        if self.request.user != self.get_object():
-            return redirect(reverse_lazy('newsharborapp:home'))
-        return super().get(request, *args, **kwargs)
-    
+
+
     def get_object(self, queryset=None):
         return self.request.user
     
@@ -238,28 +295,27 @@ class UserChangePasswordView(FormView):
 ############### Work ##############
 
 
-class EditorPermissionMixin(PermissionRequiredMixin):
-    permission_required = 'newsharborapp.Editor'
 
-    def handle_no_permission(self):
-        return redirect('newsharborapp:home') 
-
-
-class EditorPanelView(generic.TemplateView):
+class EditorPanelView(EditorOnlyMixin, generic.TemplateView):
 
     template_name='newsharborapp/editor_panel.html'
+    
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        if not self.request.user.profile.is_editor:
-            return redirect(reverse_lazy('newsharborapp:home'))
-        return super().get(request, *args, **kwargs)
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        if action == "create_article":
+            article = Article.objects.create(title="New article", author=request.user)
+            return redirect(reverse_lazy('newsharborapp:article-edit', kwargs={'pk': article.id}))
+        return redirect(request.path)
 
 
-class ImageListView(generic.ListView):
+class ImageListView(EditorOnlyMixin, generic.ListView):
 
     model = Image
     template_name = 'newsharborapp/image_list.html'
     context_object_name = 'images'
+    paginate_by = 6 
+
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
 
@@ -267,8 +323,14 @@ class ImageListView(generic.ListView):
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
     
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context =  super().get_context_data(**kwargs)
+        page = context['page_obj']
+        context['articles'] = page
+        return context
 
-class ImageDetailView(generic.DetailView):
+
+class ImageDetailView(EditorOnlyMixin, generic.DetailView):
 
     model = Image
     template_name = 'newsharborapp/image_detail.html'
@@ -281,7 +343,7 @@ class ImageDetailView(generic.DetailView):
         return super().get(request, *args, **kwargs)
 
 
-class ImageRenameView(generic.UpdateView):
+class ImageRenameView(EditorOnlyMixin, generic.UpdateView):
 
     model = Image
     template_name = 'newsharborapp/image_edit.html'
@@ -302,7 +364,7 @@ class ImageRenameView(generic.UpdateView):
         return redirect(reverse_lazy('newsharborapp:image', kwargs={'pk': self.get_object().id}))
 
 
-class ImageAssignView(generic.UpdateView):
+class ImageAssignView(EditorOnlyMixin, generic.UpdateView):
 
     model = Image
     template_name = 'newsharborapp/image_edit.html'
@@ -328,7 +390,7 @@ class ImageAssignView(generic.UpdateView):
         return get_object_or_404(Image, pk=self.kwargs['pk'])
 
 
-class ImageCreateView(generic.CreateView):
+class ImageCreateView(EditorOnlyMixin, generic.CreateView):
 
     model = Image
     form_class = ImageCreateForm
@@ -336,49 +398,27 @@ class ImageCreateView(generic.CreateView):
     success_url = reverse_lazy('newsharborapp:images')
 
 
-class ImageDeleteView(generic.DeleteView):
+class ImageDeleteView(EditorOnlyMixin, generic.DeleteView):
 
     model = Image
     template_name = 'newsharborapp/image_delete.html'
     success_url = reverse_lazy('newsharborapp:images')
 
 
-class ArticleSelectView(generic.ListView):
+class ArticleSelectView(EditorOnlyMixin, generic.ListView):
 
     model = Article
     template_name = 'newsharborapp/article_select.html'
     context_object_name = 'articles'
+    paginate_by = 6  
 
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        articles = self.get_queryset()
-        for article in articles:
-            photos = article.images.all()
-            if photos:
-                article.photo = photos[0].photo
-            else:
-                article.photo = Image.objects.all()[0].photo
-        context['articles'] = articles
-        context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
-        time_periods = Article.objects.first().get_time_periods()
-        context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
-        selected_author = self.request.GET.get('author')
-        if selected_author:
-            context['selected_author'] = User.objects.get(id = self.request.GET.get('author'))  
-        context['selected_display_status'] = self.request.GET.get('display_status', '')
-        selected_pub_period = self.request.GET.get('pub_period')
-        if selected_pub_period:
-            context['selected_pub_period'] = selected_pub_period
-        return context
-    
+
     def get_queryset(self):
         queryset = super().get_queryset()
-        author_id = self.request.GET.get('author')
+        author_id = self.request.GET.get('author', '')
         display_status = self.request.GET.get('display_status')
-        try:
-            pub_period = self.request.GET.get('pub_period').lower().replace(" ","_")
-        except AttributeError:
-            pub_period = False
+        pub_period = self.request.GET.get('pub_period', "").lower().replace(" ","_")
+
         if author_id:
             queryset = queryset.filter(author = author_id)
         if display_status == 'displayed':
@@ -394,9 +434,29 @@ class ArticleSelectView(generic.ListView):
                 queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
             if pub_period == "published_last_month":
                 queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
+        for article in queryset:
+            photos = article.images.all()
+            if photos:
+                article.photo = photos[0].photo
+            else:
+                article.photo = Image.objects.all()[0].photo
         return queryset
 
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        articles = self.get_queryset()
+
+        context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
+        time_periods = Article.objects.first().get_time_periods()
+        context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
+        context['selected_author'] = self.request.GET.get('author', '')
+        context['selected_display_status'] = self.request.GET.get('display_status', '')
+        context['selected_pub_period'] = self.request.GET.get('pub_period', '')
+        page = context['page_obj']
+        context['articles'] = page
+        return context    
     
+
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
         if action == "create_article":
@@ -405,7 +465,7 @@ class ArticleSelectView(generic.ListView):
         return redirect(request.path)
 
 
-class ArticleEditView(generic.DetailView):
+class ArticleEditView(EditorOnlyMixin, generic.DetailView):
 
     model = Article
     template_name = 'newsharborapp/article_edit.html'
@@ -464,7 +524,7 @@ class ArticleEditView(generic.DetailView):
         return redirect(request.path)
 
 
-class ArticleAddImageView(generic.DetailView):
+class ArticleAddImageView(EditorOnlyMixin, generic.DetailView):
 
     model = Article
     template_name = 'newsharborapp/article_add_image.html'

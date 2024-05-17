@@ -1,15 +1,14 @@
 /* _______________________________BASE__________________________________________ */
 
 header {
-    background: #202020 url("images/header_background_x.jpg") repeat;
+    background: #202020 url("images/Banner.png") no-repeat center center;
     background-size: cover;
     color: #fff;
     padding-top: 20px;
     padding-bottom: 20px;
     border-radius: 10px;
-    border: 5px inset rgb(15, 15, 15); 
+    border: 5px inset rgb(15, 15, 15);
 }
-
 
 nav ul {
     list-style: none;
@@ -123,8 +122,83 @@ h5{
     padding:15px;
 }
 
-/* ________________________________VIEW_________________________________________ */
+/* ________________________________PAGINATION________________________________________ */
 
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination .step-links a {
+    margin: 0 5px;
+    padding: 5px 10px;
+    font-size: 120%;
+    text-decoration: none;
+    color: rgb(207, 245, 255);
+    background-color: rgb(37, 37, 37);
+    border: 3px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+}
+
+.pagination .current {
+    margin: 0 5px;
+    padding: 5px 10px;
+    font-size: 150%;
+    color: rgb(207, 245, 255);
+    background-color: rgb(37, 37, 37);
+    border: 3px inset rgb(15, 15, 15); 
+    border-radius: 5px;
+}
+
+.pagination .step-links a:hover {
+    background-color: #e9ecef;
+    color: #0056b3;
+}
+
+/* ________________________________VIEW_________________________________________ */
+.big-news-box {
+    background: #202020;
+    border: 5px inset rgb(15, 15, 15); 
+    width: 46.7%;
+    margin: 1%;
+    height: 50%; 
+    overflow: hidden; 
+    color: rgb(207, 245, 255);
+    position: relative; 
+    display: inline-block;
+    vertical-align: top;
+    border-radius: 10px;
+}
+
+.big-news-box:hover{
+    border: 5px inset rgb(241, 120, 39); 
+    background: #f7ab39;
+    cursor: pointer;
+
+}
+
+.big-news-box img {
+    width: 100%;
+    height: 80%; 
+    object-fit: cover; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+}
+
+
+.big-news-box .caption {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 20%; 
+    padding: 10px;
+    box-sizing: border-box; 
+    text-align: center; 
+    font-size: 150%;
+}
 
 .news-box {
     background: #202020;
@@ -156,6 +230,7 @@ h5{
     left: 0; 
 }
 
+
 .news-box .caption {
     position: absolute;
     bottom: 0;
@@ -170,7 +245,6 @@ h5{
 .article-lead-image-box{
     position:inherit;
     width:100%;
-
 }
 
 .article-lead-image-box img{

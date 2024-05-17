@@ -16,6 +16,11 @@
    <button class="custom-button-dark" style="width: 30%;" type="button">Images</button>
 </a>
 
+<form method="post">
+   {% csrf_token %}
+   <button class="custom-button-dark" style="width: 30%;" type="submit" name="action" value="create_article">Create new article</button>
+</form>
+
 
 
 {% endblock %}
