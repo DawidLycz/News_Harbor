@@ -81,6 +81,11 @@
             <button class="article-edit-button" type="submit" name="action" value="create_another">Add Paragraph</button>
             <button class="article-edit-button" type="submit" name="action" value="save_paragraphs">Save Text</button>
             <button class="article-edit-button" type="reset">Reset</button>
+            <h2>Generate Article with AI</h2>
+            <h3>Please enter the topic of article, and click button to generate it. This action will delate whole text, and replace it with new</h3>
+            <input name="ai_ariticle_topic"></input>
+            <button class="article-edit-button" type="submit" name="action" value="generate_article">Generate</button>
+            <span>Paragraphs: {{num_paragraphs}}</span>
          {% endif %}
       </form>
    </div>
@@ -100,6 +105,7 @@
             <button class="article-edit-button" class="article-image-box-click-button" type="button">Assing new image</button>
          </a>
       </form>
+      <span>Images: {{num_images}}</span>
    </div>
 </div>
 {% endblock %}

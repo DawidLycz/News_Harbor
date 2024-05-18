@@ -22,6 +22,7 @@ from django.shortcuts import render, redirect
 
 from .models import Article, Image, Paragraph, Profile, Comment
 from .forms import *
+from .article_generation import generate_article
 
 
 class EditorOnlyMixin:
@@ -29,7 +30,7 @@ class EditorOnlyMixin:
         if not self.request.user.profile.is_editor:
             print ("Acces denied")
             return redirect(reverse_lazy('newsharborapp:home'))
-
+        return super().get(request, *args, **kwargs)
 
 class IndexView(generic.ListView):
     
@@ -473,7 +474,10 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
+        article = self.get_object()
         context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
+        context['num_paragraphs'] = len(article.paragraphs.all())
+        context['num_images'] = len(article.images.all())
         return context
 
     def save_all(self, request, *args, **kwargs):
@@ -487,11 +491,12 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
 
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
+        article = self.get_object()
         if action == "create_lead":
-            Paragraph.objects.create(title="Lead Paragraph...", article=self.get_object(), is_lead=True)
+            Paragraph.objects.create(title="Lead Paragraph...", article=article, is_lead=True)
         elif action == "create_another":
             self.save_all(request, *args, **kwargs)
-            Paragraph.objects.create(title="Next Paragraph...", article=self.get_object(), is_lead=False)
+            Paragraph.objects.create(title="Next Paragraph...", article=article, is_lead=False)
         elif action == "save_paragraphs":
             self.save_all(request, *args, **kwargs)
         elif "delete_paragraph" in action:
@@ -500,27 +505,35 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
             Paragraph.objects.get(pk=pk).delete()        
         elif "delete_image" in action:
             pk = action.rsplit("_")[-1]
-            article = self.get_object()
             image = Image.objects.get(pk=pk)
             article.images.remove(image)
         elif action == "set_for_display":
-            article = self.get_object()
             article.for_display = True
             article.save()
         elif action == "set_hidden":
-            article = self.get_object()
             article.for_display = False
             article.save()
         elif action == "save_author":
             author = request.POST.get('author')
             user = User.objects.get(id=author)
-            article = self.get_object()
             article.author = user
             article.save()
         elif action == "delete_article":
-            article = self.get_object()
             article.delete()
             return redirect(reverse_lazy('newsharborapp:article-select'))
+        elif action == "generate_article":
+            print ('genereate')
+            topic = request.POST.get('ai_ariticle_topic')
+            Paragraph.objects.filter(article=article).delete()
+            article_dict = generate_article(topic)
+            paragraphs_num = (len(article_dict) - 1) // 2
+            article.title = article_dict.get('title', 'No title')
+            for num in range(paragraphs_num):
+                num += 1
+                title = article_dict.get(f"paragraph{num}_title", f"paragraph {num} title")
+                text = article_dict.get(f"paragraph{num}_text", f"paragraph {num} text")
+                Paragraph.objects.create(article=article, title=title, text=text, is_lead=num==1)
+            article.save()
         return redirect(request.path)
 
 

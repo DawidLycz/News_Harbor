@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+AI_API_KEY = 'pk-uojpTslfPXZkUoVfetlFigRENLVXgCPAweGwrJNHxXukhgsC'
 
 # Application definition
 
