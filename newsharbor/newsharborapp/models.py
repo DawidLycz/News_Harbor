@@ -49,7 +49,7 @@ class Article(models.Model):
     pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True)
     access = models.ManyToManyField(User, related_name="has_access", blank=True)
     access_required = models.BooleanField(default=False)
-
+    time_periods = ['published_today', 'published_last_day', 'published_last_week', 'published_last_month']
 
     class Meta:
         ordering = ['-pub_date']
@@ -88,20 +88,24 @@ class Paragraph(models.Model):
     text = models.TextField(default='', blank=True)
     is_lead = models.BooleanField(default=False)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['article', 'is_lead'], condition=models.Q(is_lead=True), name='unique_lead_paragraph'),
-        ]
-
     def save(self, *args, **kwargs) -> None:
         if not self.title:
             text_first_sentence = self.text.split(".", 1)[0]
             self.title = text_first_sentence
+        
+        if self.is_lead:
+            existing_lead_paragraph = Paragraph.objects.filter(article=self.article, is_lead=True).first()
+            if existing_lead_paragraph and existing_lead_paragraph != self:
+                raise ValidationError('There can only be one lead paragraph per article.')
+        
         super().save(*args, **kwargs)
 
     def clean(self):
-        if self.is_lead and self.article.paragraphs.filter(is_lead=True).exists():
+        if self.is_lead and self.article.paragraphs.filter(is_lead=True).exists() and self.article.paragraphs.filter(is_lead=True).first() != self:
             raise ValidationError('There can only be one lead paragraph per article.')
+
+    def __str__(self):
+        return self.title
 
 class Image(models.Model):
 
@@ -110,6 +114,8 @@ class Image(models.Model):
     photo = models.ImageField(upload_to='article_images/')
     pub_date = models.DateTimeField(verbose_name="date published", auto_now_add=True, blank=True)
     
+    class Meta:
+        ordering = ['-pub_date']
 
     def __str__(self):
         return self.name
@@ -128,6 +134,32 @@ class Image(models.Model):
         if not self.name or self.name == 'image':
             self.name = self.get_name()
         super().save(*args, **kwargs)
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=255)
+    articles = models.ManyToManyField(Article, related_name="tags", blank=True)
+    images = models.ManyToManyField(Image, related_name="tags", blank=True)
+    major = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if self.name:
+            self.name = self.name.strip().capitalize()
+        if not self.id:
+            existing_tag = Tag.objects.filter(name=self.name).first()
+            if not existing_tag:
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
+        
 
 
 class Comment(models.Model):

@@ -6,6 +6,23 @@
     
 {% block content %}
 
+<div class="edit-tag-box">
+    <span style="color:rgb(207, 245, 255);">Click to remove</span>
+    <h3>Tags</h3>
+    <form method="post" id="tagForm">
+        {% csrf_token %}
+        {% if image.tags.all %}
+            {% for tag in image.tags.all %}
+                <button class="article-edit-button" type="submit" name="action" value="delete_tag_{{tag.id}}">{{tag}}</button>
+            {% endfor %}
+        {% else %}
+            <h4>No tags yet</h4>
+        {% endif %}
+        <h4 style="opacity: 0;">This should not appear</h4>
+        <input name="tag_name" id="tagNameInput"></input>
+        <button id="addTagButton" style="margin-left:50%; transform:translateX(-50%)" type="submit" name="action" value="add_tag">Add Tag</button>
+    </form>
+</div>
 
 <div class="big-image-box"> 
     <img src="{{ image.photo.url }}" alt="{{ image.photo }}">
@@ -40,5 +57,14 @@
 <a href="{% url 'newsharborapp:image-delete' image.id %}">
     <button class="custom-button-dark" style="width: 20%; margin-left: 2%; transform: translateX(0%);" type="button">Delete</button>
 </a>
+
+<script>
+    document.getElementById('tagNameInput').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); 
+            document.getElementById('addTagButton').click(); 
+        }
+    });
+</script>
 
 {% endblock %}

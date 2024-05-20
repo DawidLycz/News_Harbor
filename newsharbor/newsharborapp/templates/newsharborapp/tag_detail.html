@@ -1,0 +1,67 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Tag
+{% endblock %}
+    
+{% block content %}
+
+<h1>{{tag}}</h1>
+<div style="display: flex;">
+   {% if tag.major %}
+      <div class="tag-label">
+         <h2>Tag is major</h2>
+         <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="action" value="set_minor">Set Minor</button>
+         </form>
+      </div>
+   {% else %}
+      <div class="tag-label">
+         <h2>Tag is minor</h2>
+         <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="action" value="set_major">Set Major</button>
+         </form>
+      </div>
+   {% endif %}
+   <button style="position: absolute;" class="custom-button-dark">
+      <a href="{% url 'newsharborapp:tags' %}" style="text-decoration: none; color:inherit;">
+         See other tags
+      </a>
+   </button>
+   <div style="margin-left:50%; margin-right:5%;" class="tag-label">
+      <h2>Delete Tag</h2>
+      <form method="post">
+         {% csrf_token %}
+         <button type="submit" name="action" value="delete_tag">Delete</button>
+      </form>
+   </div>
+</div>
+
+<div class="related-tag-box">
+   <h2>Related articles</h2>
+   <h3>Click to unassign</h3>
+   <form method="post">
+      {% csrf_token %}
+      {% for article in tag.articles.all %}
+         <button style="float:center" type="submit" name="action" value="unassign_article_{{article.id}}">{{article}}</button>
+      {% endfor %}
+   </form>
+
+</div>
+
+<div class="related-tag-box">
+   <h2>Related Images</h2>
+   <h3>Click to unassign</h3>
+   <form method="post">
+      {% csrf_token %}
+      {% for image in tag.images.all %}
+            <button type="submit" name="action" value="unassign_image_{{image.id}}">
+               <img src="{{ image.photo.url }}" alt="Image">
+            </button>
+      {% endfor %}
+   </form>
+</div>
+
+{% endblock %}

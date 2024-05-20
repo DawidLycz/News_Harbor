@@ -6,12 +6,65 @@
     
 {% block content %}
 <h1>Add Image to article:</h1>
-<h2>{{article.title}}</h2>
+<h2>{{ article.title }}</h2>
+
+<form method="get">
+    <div class="filter-box">
+        <div class="filter-cell">
+            <h4>Search</h4>
+            <input name="search" placeholder="{{searched_phrase}}">
+        </div>
+    
+        <div class="filter-cell">
+            <h4>Category</h4>
+            <select name="category">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    {% if category.name == selected_category %}
+                        <option value="{{ category }}" selected>{{ category }}</option>
+                    {% else %}
+                        <option value="{{ category }}">{{ category }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-cell">
+            <h4>Article</h4>
+            <select name="article">
+                <option value="">All articles</option>
+                {% for article in articles %}
+                    {% if article.id|stringformat:"s" == selected_article %}
+                        <option value="{{ article.id }}" selected>{{ article }}</option>
+                    {% else %}
+                        <option value="{{ article.id }}">{{ article }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+  
+        <div class="filter-cell">
+          <h4>Published</h4>
+          <select name="pub_period">
+              <option value="">Anytime</option>
+              {% for period in pub_periods %}
+                  {% if period == selected_pub_period %}
+                      <option value="{{ period }}" selected>{{ period }}</option>
+                  {% else %}
+                      <option value="{{ period }}">{{ period }}</option>
+                  {% endif %}
+              {% endfor %}
+          </select>
+      </div>
+    </div>
+    <button style="font-size: 100%; padding:2px; width:30%;" class="custom-button-dark" type="submit">Filter</button>
+    <span class="filter-span">Images: {{images_num}}</span>
+</form>
+
 <form method="post">
     {% csrf_token %}
     {% for image in images %}
-    <button type="submit" name="action" value="{{image.id}}" class="image-box"> 
-        <img src="{{ image.photo.url }}" alt="{{image.photo}}">
+    <button type="submit" name="action" value="{{ image.id }}" class="image-box"> 
+        <img src="{{ image.photo.url }}" alt="{{ image.photo }}">
         <div class="caption">
             {{ image.name }}
         </div>
@@ -19,6 +72,24 @@
     {% endfor %}
 </form>
 
+
+<div class="pagination">
+    <span class="step-links">
+        {% if images.has_previous %}
+            <a href="?page=1{% if selected_article %}&article={{ selected_article }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">&laquo; first</a>
+            <a href="?page={{ images.previous_page_number }}{% if selected_article %}&article={{ selected_article }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ images.number }} of {{ images.paginator.num_pages }}.
+        </span>
+
+        {% if images.has_next %}
+            <a href="?page={{ images.next_page_number }}{% if selected_article %}&article={{ selected_article }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">next</a>
+            <a href="?page={{ images.paginator.num_pages }}{% if selected_article %}&article={{ selected_article }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
 <a href="{% url 'newsharborapp:article-edit' article.id %}">
     <button class="custom-button-dark" style="width: 30%;" type="button">Cancel</button>
 </a>

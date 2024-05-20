@@ -6,8 +6,27 @@
     
 {% block content %}
 <form method="get">
-  <div class="article-select-label">
-      <div class="article-select-filter-cell">
+  <div class="filter-box">
+      <div class="filter-cell">
+        <h4>Search</h4>
+        <input name="search" placeholder="{{searched_phrase}}">
+      </div>
+
+      <div class="filter-cell">
+        <h4>Category</h4>
+        <select name="category">
+            <option value="">All Categories</option>
+            {% for category in categories %}
+                {% if category.name == selected_category %}
+                    <option value="{{ category }}" selected>{{ category }}</option>
+                {% else %}
+                    <option value="{{ category }}">{{ category }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-cell">
           <h4>Author</h4>
           <select name="author">
               <option value="">All Authors</option>
@@ -21,7 +40,7 @@
           </select>
       </div>
 
-      <div class="article-select-filter-cell">
+      <div class="filter-cell">
         <h4>Published</h4>
         <select name="pub_period">
             <option value="">Anytime</option>
@@ -33,9 +52,12 @@
                 {% endif %}
             {% endfor %}
         </select>
-    </div>
+      </div>
+
   </div>
   <button style="font-size: 100%; padding:2px; width:30%;" class="custom-button-dark" type="submit">Filter</button>
+  <span class="filter-span">Articles: {{articles_num}}</span>
+
 </form>
 
 {% for article in articles %}
@@ -50,8 +72,8 @@
 <div class="pagination">
     <span class="step-links">
         {% if articles.has_previous %}
-            <a href="?page=1{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">&laquo; first</a>
-            <a href="?page={{ articles.previous_page_number }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">previous</a>
+            <a href="?page=1{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">&laquo; first</a>
+            <a href="?page={{ articles.previous_page_number }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">previous</a>
         {% endif %}
 
         <span class="current">
@@ -59,10 +81,11 @@
         </span>
 
         {% if articles.has_next %}
-            <a href="?page={{ articles.next_page_number }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">next</a>
-            <a href="?page={{ articles.paginator.num_pages }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}">last &raquo;</a>
+            <a href="?page={{ articles.next_page_number }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">next</a>
+            <a href="?page={{ articles.paginator.num_pages }}{% if selected_author %}&author={{ selected_author }}{% endif %}{% if selected_display_status %}&display_status={{ selected_display_status }}{% endif %}{% if selected_pub_period %}&pub_period={{ selected_pub_period }}{% endif %}{% if searched_phrase %}&search={{ searched_phrase }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">last &raquo;</a>
         {% endif %}
     </span>
 </div>
+
 
 {% endblock %}

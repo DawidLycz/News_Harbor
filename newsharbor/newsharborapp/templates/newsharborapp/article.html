@@ -6,12 +6,27 @@
     
 {% block content %}
 
+
 <h5>{{article.title}}</h5>
 {% if lead_paragraph %}
     <p style="text-align: center;" class="article-lead-paragraph">{{lead_paragraph.title}}</p>
+    {% if gallery %}
+    <div class="gallery">
+        <div class="images">
+            {% for image in gallery %}
+                <div class="image">
+                    <img src="{{ image.photo.url }}" alt="{{ image.caption }}">
+                </div>
+            {% endfor %}
+        </div>
+        <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+        <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    </div>
+    {% else %}
     <div class="article-lead-image-box">
         <img src="{{ article.lead_photo.url }}" alt="Image">
     </div>
+    {% endif %}
     <p class="article-lead-paragraph">{{lead_paragraph.text}}</p>
 {% endif %}
 
@@ -19,8 +34,8 @@
     {% if link.is_left %}
         <div class="article-chain-link">
             <div class="c-text-box">
-            <h2>{{link.paragraph.title}}</h2>
-            <p>{{link.paragraph.text}}</p>
+                <h2>{{link.paragraph.title}}</h2>
+                <p style="margin:1%">{{link.paragraph.text}}</p>
             </div>
             <div class="c-image-box">
                 <img src="{{ link.img.photo.url }}" alt="Image">
@@ -33,7 +48,7 @@
             </div>
             <div class="c-text-box">
                 <h2>{{link.paragraph.title}}</h2>
-                <p>{{link.paragraph.text}}</p>
+                <p style="margin:1%">{{link.paragraph.text}}</p>
             </div>
         </div>
     {% endif %}
@@ -53,10 +68,14 @@
         <span style="margin-left: 5%;">Likes: {{likes}}</span>
         <span style="float:right;">Author: {{article.author}}</span>
         <span style="float:right; margin-right:5%;">Published: {{article.get_date}}</span>
-        {% if is_fan %}
-            <button button="submit" name="action" value="dislike_article">Dislike</button>
+        {% if user.is_authenticated %}
+            {% if is_fan %}
+                <button button="submit" name="action" value="dislike_article">Liked</button>
+            {% else %}
+                <button button="submit" name="action" value="like_article">Like</button>
+            {% endif %}
         {% else %}
-            <button button="submit" name="action" value="like_article">Like</button>
+            <button type="button">Log in to leave a like</button>
         {% endif %}
     </div>
 </form>
@@ -70,11 +89,15 @@
             <div class="article-comment-box">
                 <div class="article-comment-box-label">
                     <span style="margin-left:2%;">Published: {{comment.get_date}} </span>
-                    {% if comment.author == user or user.profile.is_editor%}
-                        <button name="action" value="delete_comment_{{comment.id}}" type="submit" style="transform: translateX(-50%)">Delete</button>
+                    {% if user.is_authenticated %}
+                        {% if comment.author == user or user.profile.is_editor%}
+                            <button name="action" value="delete_comment_{{comment.id}}" type="submit" style="transform: translateX(-50%)">Delete</button>
+                        {% else %}
+                            <button name="action" value="hate_comment_{{comment.id}}" type="submit">Dislike: {{comment.haters_num}}</button>
+                            <button name="action" value="like_comment_{{comment.id}}" type="submit" style="transform: translateX(+20%)">Like: {{comment.fans_num}}</button>
+                        {% endif %}
                     {% else %}
-                        <button name="action" value="hate_comment_{{comment.id}}" type="submit">Dislike: {{comment.haters_num}}</button>
-                        <button name="action" value="like_comment_{{comment.id}}" type="submit" style="transform: translateX(+20%)">Like: {{comment.fans_num}}</button>
+                        <button type="button" style="width: 25%; transform: translateX(-50%)">Log in to react on comment</button>
                     {% endif %}
                     <span style="float:right; margin-right:2%;">Author: {{comment.author}}</span>
                 </div>
@@ -86,14 +109,31 @@
 <h2>There is no comments yet</h2>
 {% endif %}
 
-<form method="post">
-    {% csrf_token %}
-    <div class="article-comment-input-box">
-        <h4>Leave a comment</h4>
-        <textarea name="user_comment"></textarea>
-        <button button="submit" style="margin-left:50%; transform:translateX(-50%)" class="article-edit-button" name="action" value="publish_comment">Publish</button>
-    </div>
-</form>
+{% if user.is_authenticated %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="article-comment-input-box">
+            <h4>Leave a comment</h4>
+            <textarea name="user_comment"></textarea>
+            <button button="submit" style="margin-left:50%; transform:translateX(-50%)" class="article-edit-button" name="action" value="publish_comment">Publish</button>
+        </div>
+    </form>
+{% else %}
+    <h2>You can leave a comment, if you log in.</h2>
+{% endif %}
 
+
+<script>
+    let currentSlide = 0;
+
+    function changeSlide(direction) {
+        const images = document.querySelector('.gallery .images');
+        const totalSlides = images.children.length;
+
+        currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+        const offset = -currentSlide * 100;
+        images.style.transform = `translateX(${offset}%)`;
+    }
+</script>
 
 {% endblock %}

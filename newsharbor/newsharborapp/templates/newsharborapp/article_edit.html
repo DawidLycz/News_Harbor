@@ -6,10 +6,14 @@
     
 {% block content %}
 
-<h1>{{article}}</h1>
+
 <a href="{% url 'newsharborapp:article-select' %}">
    <button class="custom-button-dark" style="position:absolute; margin-left:2%; top:14%; transform:none">Select other Article</button>
 </a>
+<a href="{% url 'newsharborapp:article' article.id %}">
+   <button class="custom-button-dark" style="position:absolute; right:2%; top:14%; transform:none">View Article</button>
+</a>
+<h1 style="margin-top: 6%;">{{article}}</h1>
 {% if user.profile.is_editor_in_chief %}
    <h3>Changing this settings resets text</h3>
    <div style="display: flex;">
@@ -56,7 +60,24 @@
       </div>
    </div>
 {% endif %}
+<div class="edit-tag-box">
+   <span style="color:rgb(207, 245, 255);">Click to remove<span>
+   <h3>Tags</h3>
+   <form method="post">
+      {% csrf_token %}
+      {% if article.tags.all %}
+         {% for tag in article.tags.all %}
+            <button class="article-edit-button" type="submit" name="action" value="delete_tag_{{tag.id}}">{{tag}}</button>
+         {% endfor %}
+      {% else %}
+         <h4>No tags yet</h4>
+      {% endif %}
+      <h4 style="opacity: 0;">This should not apear</h4>
+      <input name="tag_name"></input>
+      <button style="margin-left:50%; transform:translateX(-50%)" type="submit" name="action" value="add_tag">Add Tag</button>
+   </form>
 
+</div>
 <div class="article-edit-panel-box">
    <div class="article-input-box">
       <form method="post">
@@ -81,12 +102,12 @@
             <button class="article-edit-button" type="submit" name="action" value="create_another">Add Paragraph</button>
             <button class="article-edit-button" type="submit" name="action" value="save_paragraphs">Save Text</button>
             <button class="article-edit-button" type="reset">Reset</button>
+         {% endif %}
             <h2>Generate Article with AI</h2>
             <h3>Please enter the topic of article, and click button to generate it. This action will delate whole text, and replace it with new</h3>
             <input name="ai_ariticle_topic"></input>
             <button class="article-edit-button" type="submit" name="action" value="generate_article">Generate</button>
             <span>Paragraphs: {{num_paragraphs}}</span>
-         {% endif %}
       </form>
    </div>
 
@@ -107,6 +128,7 @@
       </form>
       <span>Images: {{num_images}}</span>
    </div>
+
 </div>
 {% endblock %}
 

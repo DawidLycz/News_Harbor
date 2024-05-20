@@ -2,9 +2,7 @@ import requests
 
 from django.conf import settings
 
-# api_key = settings.AI_API_KEY
-api_key = 'pk-uojpTslfPXZkUoVfetlFigRENLVXgCPAweGwrJNHxXukhgsC'
-
+api_key = settings.AI_API_KEY
 base_url = "https://api.pawan.krd/gpt-3.5-unfiltered/v1"
 
 EXAMPLE_JSON = {
@@ -25,7 +23,7 @@ def generate_article(topic):
     if not topic:
         topic = "random topic"
 
-    prompt = f"Please generate an article in json form about {topic}.Type it all in one line.  The article should be divided into paragraphs, with each paragraph addressing a different aspect of the topic. Then, fill in the following python dictionary format with the content of the generated article:{EXAMPLE_JSON}"
+    prompt = f"Please generate an article in json form about {topic}.Type it all in one line. The article should be divided into paragraphs, with each paragraph addressing a different aspect of the topic. Then, fill in the following python dictionary format with the content of the generated article:{EXAMPLE_JSON}."
 
     url = 'https://api.pawan.krd/v1/completions'
     headers = {
@@ -35,8 +33,8 @@ def generate_article(topic):
     data = {
         "model": "pai-001-light",
         "prompt": f"{prompt}" ,
-        "temperature": 0.1,
-        "max_tokens": 1024,
+        "temperature": 0.7,
+        "max_tokens": 8196,
         "stop": ["Human:", "AI:"]
     }
     response = requests.post(url, headers=headers, json=data)
@@ -45,16 +43,22 @@ def generate_article(topic):
         string = (response.json()['choices'][0]['text'])
     else:
         return {"title": "Connection error"}
+    
+    try:
+        prefix, content = string.split("{", 1)
+    except ValueError:
+        content = string
+    content = content.strip()
+    used_quots_type = content[0]
 
-    prefix, content = string.split("{", 1)
     content = "{" + content
     if content[-1] == ":":
         content += "''"
-    if content[-1] not in '"}':
-        content += '"'
+    if content[-1] not in ['}', used_quots_type]:
+        content += used_quots_type
     if content[-1] != "}":
         content += '}'
-    content = content.strip()
+
     article = {}
     try:
         raw_article = eval(content)
@@ -63,5 +67,4 @@ def generate_article(topic):
     for token in raw_article:
         content = raw_article[token]
         article[token.lower()] = content
-    
     return article

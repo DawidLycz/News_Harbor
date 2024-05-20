@@ -30,4 +30,7 @@ urlpatterns = [
     path('articles/select', views.ArticleSelectView.as_view(), name='article-select'),
     path('articles/<int:pk>/edit/', views.ArticleEditView.as_view(), name='article-edit'),
     path('articles/<int:pk>/add-image/', views.ArticleAddImageView.as_view(), name='article-add-image'),
+
+    path('tags/', views.TagListView.as_view(), name='tags'),
+    path('tags/<int:pk>', views.TagDetailView.as_view(), name='tag'),
 ]

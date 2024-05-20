@@ -6,27 +6,33 @@
     
 {% block content %}
 
-<a href="{% url 'newsharborapp:article' main_article.id %}" class="big-news-box"> 
-    <img src="{{ main_article.photo.url }}" alt="{{ main_article.photo }}">
-    <div class="caption">
-        {{ main_article.title }}
-    </div>
-</a> 
+{% if articles %}
+    <a href="{% url 'newsharborapp:article' main_article.id %}" class="big-news-box"> 
+        <img src="{{ main_article.photo.url }}" alt="{{ main_article.photo }}">
+        <div class="caption">
+            {{ main_article.title }}
+        </div>
+    </a> 
 
-{% for article in articles %}
+    {% for article in articles %}
 
-<a href="{% url 'newsharborapp:article' article.id %}" class="news-box"> 
-    <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
-    <div class="caption">
-        {{ article.title }}
-    </div>
-</a> 
+    <a href="{% url 'newsharborapp:article' article.id %}" class="news-box"> 
+        <img src="{{ article.photo.url }}" alt="{{ article.photo }}">
+        <div class="caption">
+            {{ article.title }}
+        </div>
+    </a> 
 
-{% endfor %}
+    {% endfor %}
 
-<p></p>
-<a href="{% url 'newsharborapp:articles' %}">
-    <button class="custom-button-dark">See more articles</button>
-</a>
+    <p></p>
+    <a href="{% url 'newsharborapp:articles' %}">
+        <button class="custom-button-dark">See more articles</button>
+    </a>
+{% else %}
+
+<h2>It apears there is no news</h2>
+
+{% endif %}
 
 {% endblock %}

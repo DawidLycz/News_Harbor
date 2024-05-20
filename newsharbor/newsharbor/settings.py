@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-jftiws+8amhwiar%v!4!()&54(09ib=jr(o$2*h%=!@q(11dt#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+DATABASE_PASSWORD = 'Y7y7y7y7!!'
 AI_API_KEY = 'pk-uojpTslfPXZkUoVfetlFigRENLVXgCPAweGwrJNHxXukhgsC'
 
 # Application definition
@@ -76,12 +75,45 @@ WSGI_APPLICATION = 'newsharbor.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+if 'PYTHONANYWHERE_DOMAIN' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'DawidLycz$default',
+            'USER': 'DawidLycz',
+            'PASSWORD': DATABASE_PASSWORD,
+            'HOST': 'DawidLycz.mysql.pythonanywhere-services.com',
+            'PORT': '3306',
+            'TEST': {
+                'NAME': 'test_getstock_db',
+            },
+        }
     }
-}
+    DEBUG = False
+    ALLOWED_HOSTS = ['DawidLycz.pythonanywhere.com']
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'newsharbor_db',
+            'USER': 'newsharbor_admin',
+            'PASSWORD': DATABASE_PASSWORD,
+            'HOST': 'localhost',
+            'PORT': '3306',
+            'TEST': {
+                'NAME': 'test_newsharbor_db',
+            },      
+        }
+    }
+    DEBUG = True
+    ALLOWED_HOSTS = []
 
 
 # Password validation

@@ -20,9 +20,22 @@ from django.utils import timezone
 
 from django.shortcuts import render, redirect
 
-from .models import Article, Image, Paragraph, Profile, Comment
+from .models import Article, Image, Paragraph, Profile, Tag, Comment
 from .forms import *
 from .article_generation import generate_article
+
+def clean_search_phrase(phrase) -> list[str]:
+    for char in ",.123456789!@#$%^&*(){}[];:<>?/":
+        phrase = phrase.replace(char, " ")
+    words = phrase.split()
+    words_list = []
+    for word in words:
+        if word:
+            word = word.capitalize()
+            words_list.append(word)
+            if word[-1] == "s":
+                words_list.append(word[:-1])
+    return words_list
 
 
 class EditorOnlyMixin:
@@ -31,6 +44,7 @@ class EditorOnlyMixin:
             print ("Acces denied")
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
+
 
 class IndexView(generic.ListView):
     
@@ -48,9 +62,13 @@ class IndexView(generic.ListView):
             if photos:
                 article.photo = photos[0].photo
             else:
-                article.photo = Image.objects.all()[0].photo
-        context['main_article'] = articles[0]
-        context['articles'] = articles[1:]
+                article.photo = Image.objects.filter(name='default')[0].photo
+        if articles.exists():
+            print(123)
+            context['main_article'] = articles[0]
+            context['articles'] = articles[1:]
+        else:
+            context['articles'] = None
         return context
     
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -61,13 +79,25 @@ class ArticleListView(generic.ListView):
     model = Article
     template_name = 'newsharborapp/article-list.html'
     context_object_name = 'articles'
-    paginate_by = 4  
-
+    paginate_by = 4
+    
     def get_queryset(self):
         queryset = Article.objects.filter(for_display=True)
-        author_id = self.request.GET.get('author')
+        author_id = self.request.GET.get('author', "")
         pub_period = self.request.GET.get('pub_period', "").lower().replace(" ","_")
-        
+        category = self.request.GET.get('category', '')
+        search_phrase = self.request.GET.get('search', '')
+        if search_phrase:
+            search_words = clean_search_phrase(search_phrase)
+            tags = Tag.objects.filter(name__in=search_words)
+            if tags.exists():
+                queryset = queryset.filter(tags__in=tags)
+            else:
+                queryset = Article.objects.none()
+        if category:
+            tag = Tag.objects.filter(name=category).first()
+            queryset = queryset.filter(tags__id=tag.id)
+
         if author_id:
             queryset = queryset.filter(author_id=author_id)
         if pub_period:
@@ -79,24 +109,29 @@ class ArticleListView(generic.ListView):
                 queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
             if pub_period == "published_last_month":
                 queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
-        
+        queryset = queryset.distinct()
         for article in queryset:
             photos = article.images.all()
             if photos.exists():
                 article.photo = photos[0].photo
             else:
                 article.photo = Image.objects.first().photo if Image.objects.exists() else None
-                
+                queryset = queryset.distinct()
+        
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['articles_num'] = self.get_queryset().count()
         context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
         context['selected_author'] = self.request.GET.get('author', '')
         context['selected_display_status'] = self.request.GET.get('display_status', '')
         context['selected_pub_period'] = self.request.GET.get('pub_period', '')
         time_periods = Article.objects.first().get_time_periods()
         context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
+        context['categories'] = Tag.objects.filter(major=True)
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['searched_phrase'] = self.request.GET.get('search', '')
         page = context['page_obj']
         context['articles'] = page
         return context
@@ -146,7 +181,7 @@ class ArticleDetailView(generic.DetailView):
             elif num_paragraphs < num_images:
                 context['gallery'] = images
         
-        article.lead_photo = images[0].photo if images else Image.objects.all()[0].photo
+        article.lead_photo = images[0].photo if images else Image.objects.filter(name='default')[0].photo
         if article.unique_visitors.all():
             context['visits'] = len(article.unique_visitors.all())
         else:
@@ -317,17 +352,58 @@ class ImageListView(EditorOnlyMixin, generic.ListView):
     context_object_name = 'images'
     paginate_by = 6 
 
-
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
 
         if not self.request.user.profile.is_editor:
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
     
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context =  super().get_context_data(**kwargs)
+    def get_queryset(self):
+        queryset = Image.objects.all()
+        article = self.request.GET.get('article')
+        pub_period = self.request.GET.get('pub_period', "").lower().replace(" ","_")
+        category = self.request.GET.get('category', '')
+        search_phrase = self.request.GET.get('search', '')
+        if search_phrase:
+            search_words = clean_search_phrase(search_phrase)
+            tags = Tag.objects.filter(name__in=search_words)
+            if tags.exists():
+                queryset = queryset.filter(tags__in=tags)
+            else:
+                queryset = Image.objects.none()
+        if category:
+            tag = Tag.objects.filter(name=category).first()
+            queryset = queryset.filter(tags__id=tag.id)
+
+        if article:
+            queryset = queryset.filter(articles=article)
+        if pub_period:
+            if pub_period == "published_today":
+                queryset = queryset.filter(pub_date__gte=timezone.now().date())
+            if pub_period == "published_last_day":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=1))
+            if pub_period == "published_last_week":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
+            if pub_period == "published_last_month":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
+        queryset = queryset.distinct()
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['articles'] = Article.objects.all()
+        context['images_num'] = self.get_queryset().count()
+        context['selected_article'] = self.request.GET.get('article', '')
+        context['selected_pub_period'] = self.request.GET.get('pub_period', '')
+        time_periods = Article.objects.first().get_time_periods()
+        context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
+        context['categories'] = Tag.objects.filter(major=True)
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['placeholder'] = self.request.GET.get('search', 'Search')
+        context['searched_phrase'] = self.request.GET.get('search', '')
+
         page = context['page_obj']
-        context['articles'] = page
+        context['images'] = page
         return context
 
 
@@ -342,6 +418,25 @@ class ImageDetailView(EditorOnlyMixin, generic.DetailView):
         if not self.request.user.profile.is_editor:
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        image = self.get_object()
+        if "delete_tag" in action:
+            pk = action.rsplit("_")[-1]
+            tag = Tag.objects.get(pk=pk)
+            tag.images.remove(image)
+        elif action == "add_tag":
+            tags = request.POST.get(f'tag_name').split(",")
+            if tags:
+                for tag_name in tags:
+                    tag_name = tag_name.strip().capitalize()
+                    tag = Tag.objects.filter(name=tag_name).first()
+                    if not tag:
+                        tag = Tag.objects.create(name=tag_name)
+                        tag.save()
+                    tag.images.add(image)
+        return redirect(request.path)
 
 
 class ImageRenameView(EditorOnlyMixin, generic.UpdateView):
@@ -411,14 +506,26 @@ class ArticleSelectView(EditorOnlyMixin, generic.ListView):
     model = Article
     template_name = 'newsharborapp/article_select.html'
     context_object_name = 'articles'
-    paginate_by = 6  
+    paginate_by = 4
 
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Article.objects.all()
         author_id = self.request.GET.get('author', '')
         display_status = self.request.GET.get('display_status')
         pub_period = self.request.GET.get('pub_period', "").lower().replace(" ","_")
+        category = self.request.GET.get('category', '')
+        search_phrase = self.request.GET.get('search', '')
+        if search_phrase:
+            search_words = clean_search_phrase(search_phrase)
+            tags = Tag.objects.filter(name__in=search_words)
+            if tags.exists():
+                queryset = queryset.filter(tags__in=tags)
+            else:
+                queryset = Article.objects.none()
+        if category:
+            tag = Tag.objects.filter(name=category).first()
+            queryset = queryset.filter(tags__id=tag.id)
 
         if author_id:
             queryset = queryset.filter(author = author_id)
@@ -440,19 +547,21 @@ class ArticleSelectView(EditorOnlyMixin, generic.ListView):
             if photos:
                 article.photo = photos[0].photo
             else:
-                article.photo = Image.objects.all()[0].photo
+                article.photo = Image.objects.filter(name='default')[0].photo
         return queryset
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        articles = self.get_queryset()
-
         context['editors'] = [profile.user for profile in Profile.objects.filter(is_editor=True)]
-        time_periods = Article.objects.first().get_time_periods()
+        time_periods = Article().time_periods
+        context['articles_num'] = self.get_queryset().count()
         context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
         context['selected_author'] = self.request.GET.get('author', '')
         context['selected_display_status'] = self.request.GET.get('display_status', '')
         context['selected_pub_period'] = self.request.GET.get('pub_period', '')
+        context['categories'] = Tag.objects.filter(major=True)
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['searched_phrase'] = self.request.GET.get('search', '')
         page = context['page_obj']
         context['articles'] = page
         return context    
@@ -492,6 +601,7 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
         article = self.get_object()
+        print (action)
         if action == "create_lead":
             Paragraph.objects.create(title="Lead Paragraph...", article=article, is_lead=True)
         elif action == "create_another":
@@ -522,7 +632,6 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
             article.delete()
             return redirect(reverse_lazy('newsharborapp:article-select'))
         elif action == "generate_article":
-            print ('genereate')
             topic = request.POST.get('ai_ariticle_topic')
             Paragraph.objects.filter(article=article).delete()
             article_dict = generate_article(topic)
@@ -534,20 +643,79 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
                 text = article_dict.get(f"paragraph{num}_text", f"paragraph {num} text")
                 Paragraph.objects.create(article=article, title=title, text=text, is_lead=num==1)
             article.save()
+        elif "delete_tag" in action:
+            pk = action.rsplit("_")[-1]
+            tag = Tag.objects.get(pk=pk)
+            tag.articles.remove(article)
+        elif action == "add_tag":
+            tags = request.POST.get(f'tag_name').split(",")
+            if tags:
+                for tag_name in tags:
+                    tag_name = tag_name.strip().capitalize()
+                    tag = Tag.objects.filter(name=tag_name).first()
+                    if not tag:
+                        tag = Tag.objects.create(name=tag_name)
+                        tag.save()
+                    tag.articles.add(article)
         return redirect(request.path)
 
 
 class ArticleAddImageView(EditorOnlyMixin, generic.DetailView):
-
     model = Article
     template_name = 'newsharborapp/article_add_image.html'
     context_object_name = 'article'
+    paginate_by = 6
 
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['images'] = Image.objects.all()
-        return context
+        queryset = Image.objects.all()
+        article = self.request.GET.get('article')
+        pub_period = self.request.GET.get('pub_period', "").lower().replace(" ","_")
+        category = self.request.GET.get('category', '')
+        search_phrase = self.request.GET.get('search', '')
+        if search_phrase:
+            search_words = clean_search_phrase(search_phrase)
+            tags = Tag.objects.filter(name__in=search_words)
+            if tags.exists():
+                queryset = queryset.filter(tags__in=tags)
+            else:
+                queryset = Image.objects.none()
+        if category:
+            tag = Tag.objects.filter(name=category).first()
+            queryset = queryset.filter(tags__id=tag.id)
 
+        if article:
+            queryset = queryset.filter(articles=article)
+        if pub_period:
+            if pub_period == "published_today":
+                queryset = queryset.filter(pub_date__gte=timezone.now().date())
+            if pub_period == "published_last_day":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=1))
+            if pub_period == "published_last_week":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
+            if pub_period == "published_last_month":
+                queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
+        queryset = queryset.distinct()
+
+        paginator = Paginator(queryset, self.paginate_by)
+        
+        page = self.request.GET.get('page')
+        images = paginator.get_page(page)
+        
+        context['images'] = images
+        context['images_num'] = queryset.count()
+        context['articles'] = Article.objects.all()
+        context['selected_article'] = self.request.GET.get('article', '')
+        context['selected_pub_period'] = self.request.GET.get('pub_period', '')
+        time_periods = Article.objects.first().get_time_periods()
+        context['pub_periods'] = [period.capitalize().replace("_", " ") for period in time_periods]
+        context['categories'] = Tag.objects.filter(major=True)
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['searched_phrase'] = self.request.GET.get('search', '')
+
+
+        return context
+  
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
         image = Image.objects.get(pk=action)
@@ -556,3 +724,57 @@ class ArticleAddImageView(EditorOnlyMixin, generic.DetailView):
         article.save()
         return redirect(reverse_lazy('newsharborapp:article-edit', kwargs={'pk': self.get_object().id}))
 
+
+class TagListView(EditorOnlyMixin, generic.ListView):
+
+    model = Tag
+    template_name = 'newsharborapp/tag_list.html'
+    context_object_name = 'tags'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['minor_tags'] = Tag.objects.filter(major=False)
+        context['major_tags'] = Tag.objects.filter(major=True)
+        return context
+        
+
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        if action == "create_tag":
+            tags = request.POST.get('tag_name').split(",")
+            [Tag.objects.create(name=tag.strip().capitalize()) for tag in tags]
+        return redirect(request.path)
+
+
+class TagDetailView(EditorOnlyMixin, generic.DetailView):
+    
+    model = Tag
+    template_name = 'newsharborapp/tag_detail.html'
+    context_object_name = 'tag'
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get('action')
+        print (action)
+        tag = self.get_object()
+        if action == "set_major":
+            tag.major = True
+            tag.save()
+        if action == "set_minor":
+            tag.major = False
+            tag.save()
+        if "unassign_article" in action:
+            pk = action.rsplit("_")[-1]
+            article = Article.objects.get(pk=pk)
+            tag.articles.remove(article)
+        if "unassign_image" in action:
+            pk = action.rsplit("_")[-1]
+            image = Image.objects.get(pk=pk)
+            tag.images.remove(image)
+        if action == "delete_tag":
+            tag.delete()
+            return redirect(reverse_lazy('newsharborapp:tags'))
+        return redirect(request.path)
