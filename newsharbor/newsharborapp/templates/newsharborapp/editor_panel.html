@@ -25,6 +25,12 @@
    <button class="custom-button-dark" style="width: 30%;" type="submit" name="action" value="create_article">Create new article</button>
 </form>
 
+{% if user.profile.is_editor_in_chief %}
+<h1>Editor in Chief Panel</h1>
+<a href="{% url 'newsharborapp:register-editor' %}">
+   <button class="custom-button-dark" style="width: 30%;" type="button">Create new user</button>
+</a>
+{% endif %}
 
 
 {% endblock %}

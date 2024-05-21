@@ -1,31 +1,26 @@
-from typing import Any
 import datetime
+from string import digits, punctuation
+from typing import Any
 
-from django.db.models.query import QuerySet
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth import login, logout, update_session_auth_hash
+from django.contrib.auth.models import Group, User
+from django.contrib.auth.views import LoginView, LogoutView
+from django.core.paginator import Paginator
 from django.http import HttpRequest
-from django.http.response import HttpResponse as HttpResponse
-from django.shortcuts import get_object_or_404
+from django.http.response import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views import generic
 from django.views.generic.edit import FormView, UpdateView
-from django.contrib import messages
-from django.urls import reverse_lazy, reverse
-from django.contrib.auth.models import User
 
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib.auth import login, logout, update_session_auth_hash
-from django.utils import timezone
-
-from django.shortcuts import render, redirect
-
-from .models import Article, Image, Paragraph, Profile, Tag, Comment
-from .forms import *
 from .article_generation import generate_article
+from .forms import *
+from .models import Article, Comment, Image, Paragraph, Profile, Tag
+
 
 def clean_search_phrase(phrase) -> list[str]:
-    for char in ",.123456789!@#$%^&*(){}[];:<>?/":
+    for char in punctuation + digits:
         phrase = phrase.replace(char, " ")
     words = phrase.split()
     words_list = []
@@ -41,7 +36,6 @@ def clean_search_phrase(phrase) -> list[str]:
 class EditorOnlyMixin:
     def get(self, request, *args, **kwargs):
         if not self.request.user.profile.is_editor:
-            print ("Acces denied")
             return redirect(reverse_lazy('newsharborapp:home'))
         return super().get(request, *args, **kwargs)
 
@@ -64,16 +58,12 @@ class IndexView(generic.ListView):
             else:
                 article.photo = Image.objects.filter(name='default')[0].photo
         if articles.exists():
-            print(123)
             context['main_article'] = articles[0]
             context['articles'] = articles[1:]
         else:
             context['articles'] = None
         return context
-    
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        return super().get(request, *args, **kwargs)
-    
+        
 
 class ArticleListView(generic.ListView):
     model = Article
@@ -197,12 +187,6 @@ class ArticleDetailView(generic.DetailView):
         context['chain_tail'] = chain_tail
         return context
     
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        user = self.request.user
-        article = self.get_object()
-        if user.is_authenticated:
-            article.unique_visitors.add(user)
-        return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
@@ -252,11 +236,6 @@ class CustomLoginView(LoginView):
 class CustomLogoutView(LogoutView):
     next_page = reverse_lazy('newsharborapp:home')
 
-    def get(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            return redirect(self.next_page)
-        return super().get(request, *args, **kwargs)
-
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
     
@@ -275,6 +254,36 @@ class CustomRegisterView(generic.CreateView):
     def get_success_url(self):
         return self.success_url
     
+    
+class CustomRegisterEditorView(EditorOnlyMixin, generic.CreateView):
+    template_name = 'authorisation/register-editor.html'
+    form_class = CustomEditorCreationForm
+    success_url = reverse_lazy('newsharborapp:home')
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            user = form.save()
+            is_editor_in_chief = form.cleaned_data.get('is_editor_in_chief', False)
+            is_editor = form.cleaned_data.get('is_editor', False)
+            reader_group = Group.objects.get(name='Reader')
+            editor_group = Group.objects.get(name='Editor')
+            editor_in_chief_group = Group.objects.get(name='Editor in Chief')
+            if is_editor_in_chief:
+                user.groups.add(editor_group)
+                user.groups.add(editor_in_chief_group)
+            elif is_editor:
+                editor_group = Group.objects.get(name='Editor')
+                user.groups.add(editor_group)
+            user.groups.add(reader_group)
+            Profile.objects.create(user=user, is_editor_in_chief=is_editor_in_chief, is_editor=is_editor)
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        return self.success_url
+    
 
 class ProfileDetailView(generic.DetailView):
     template_name = 'authorisation/user_detail.html'
@@ -284,7 +293,12 @@ class ProfileDetailView(generic.DetailView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         profile = self.get_object()
-        title = profile.user.groups.all()[0]
+        if profile.is_editor_in_chief:
+            title = "Editor in Chief"
+        elif profile.is_editor:
+            title = "Editor"
+        else:
+            title = "Reader"
         context['title'] = title
         return context
 
@@ -352,11 +366,6 @@ class ImageListView(EditorOnlyMixin, generic.ListView):
     context_object_name = 'images'
     paginate_by = 6 
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-
-        if not self.request.user.profile.is_editor:
-            return redirect(reverse_lazy('newsharborapp:home'))
-        return super().get(request, *args, **kwargs)
     
     def get_queryset(self):
         queryset = Image.objects.all()
@@ -413,11 +422,6 @@ class ImageDetailView(EditorOnlyMixin, generic.DetailView):
     template_name = 'newsharborapp/image_detail.html'
     context_object_name = 'image'
 
-    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-
-        if not self.request.user.profile.is_editor:
-            return redirect(reverse_lazy('newsharborapp:home'))
-        return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
@@ -589,6 +593,7 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
         context['num_images'] = len(article.images.all())
         return context
 
+
     def save_all(self, request, *args, **kwargs):
         article = self.get_object()
         article.title = request.POST.get('title')
@@ -598,10 +603,10 @@ class ArticleEditView(EditorOnlyMixin, generic.DetailView):
             paragraph.text = request.POST.get(f'paragraph_text_{paragraph.id}')
             paragraph.save()
 
+
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
         article = self.get_object()
-        print (action)
         if action == "create_lead":
             Paragraph.objects.create(title="Lead Paragraph...", article=article, is_lead=True)
         elif action == "create_another":
@@ -665,6 +670,7 @@ class ArticleAddImageView(EditorOnlyMixin, generic.DetailView):
     template_name = 'newsharborapp/article_add_image.html'
     context_object_name = 'article'
     paginate_by = 6
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -758,7 +764,6 @@ class TagDetailView(EditorOnlyMixin, generic.DetailView):
 
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
-        print (action)
         tag = self.get_object()
         if action == "set_major":
             tag.major = True

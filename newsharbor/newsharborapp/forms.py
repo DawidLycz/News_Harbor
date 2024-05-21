@@ -38,6 +38,35 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password2'].label = 'Confirm Password'
         self.fields['password2'].help_text = ''
 
+
+class CustomEditorCreationForm(UserCreationForm):
+    email = forms.EmailField(label='Email', required=False)
+    is_editor = forms.BooleanField(label='Is Editor', required=False, widget=forms.CheckboxInput(attrs={'style': 'width:100%'}))
+    is_editor_in_chief = forms.BooleanField(label='Is Editor in Chief', required=False, widget=forms.CheckboxInput(attrs={'style': 'width:100%'}))
+
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['username'].widget.attrs['class'] = 'custom-form-field'
+        self.fields['username'].label = 'Login'
+        self.fields['username'].help_text = ''
+
+        self.fields['email'].widget.attrs['class'] = 'custom-form-field'
+
+        self.fields['password1'].widget.attrs['class'] = 'custom-form-field'
+        self.fields['password1'].label = 'Password'
+        self.fields['password1'].help_text = ''
+
+        self.fields['password2'].widget.attrs['class'] = 'custom-form-field'
+        self.fields['password2'].label = 'Confirm Password'
+        self.fields['password2'].help_text = ''
+
+
 class CustomUserEditForm(UserChangeForm):
     password = None
 
@@ -118,6 +147,5 @@ class ArticleEditForm(forms.Form):
             paragraph.text = paragraph_data.strip()
             paragraph.save()
 
-        # Delete extra paragraphs if any
         if len(paragraphs) > len(paragraphs_data):
             paragraphs.filter(id__gt=len(paragraphs_data)).delete()

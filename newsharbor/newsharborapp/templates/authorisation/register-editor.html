@@ -1,0 +1,19 @@
+{% extends 'newsharborapp/base.html' %}
+
+{% block title %}
+   Register
+{% endblock %}
+    
+{% block content %}
+
+<div class="form-box">
+<h2>Registration</h2>
+<form method="post" action="{% url 'newsharborapp:register-editor' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">  REGISTER  </button>
+    <button type="reset">  RESET  </button>
+</form>
+</div>
+
+{% endblock %}

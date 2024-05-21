@@ -1,15 +1,12 @@
 import datetime
-from typing import Iterable
-from django.db import models
-from django.contrib.auth.models import User, Group
-from django.dispatch import receiver
-from django.db.models.signals import pre_save
-from django.utils import timezone
-from django.core.exceptions import ValidationError
 
-from django.contrib import admin
+from django.contrib.auth.models import Group, User
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.utils import timezone
+
 
 
 class Profile(models.Model):
@@ -160,7 +157,6 @@ class Tag(models.Model):
         else:
             super().save(*args, **kwargs)
         
-
 
 class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="comments")
