@@ -5,6 +5,9 @@
 {% endblock %}
     
 {% block content %}
+<h1>Article selector</h1>
+<h2>Please select article, you are interested in, and enjoy.</h2>
+<h3>You can use filters below to find what you are looking for.</h3>
 <form method="get">
   <div class="filter-box">
       <div class="filter-cell">
@@ -53,11 +56,9 @@
             {% endfor %}
         </select>
       </div>
-
   </div>
   <button style="font-size: 100%; padding:2px; width:30%;" class="custom-button-dark" type="submit">Filter</button>
   <span class="filter-span">Articles: {{articles_num}}</span>
-
 </form>
 
 {% for article in articles %}

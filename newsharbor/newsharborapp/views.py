@@ -105,8 +105,7 @@ class ArticleListView(generic.ListView):
             if photos.exists():
                 article.photo = photos[0].photo
             else:
-                article.photo = Image.objects.first().photo if Image.objects.exists() else None
-                queryset = queryset.distinct()
+                article.photo = Image.objects.filter(name='default')[0].photo
         
         return queryset
 
@@ -187,6 +186,10 @@ class ArticleDetailView(generic.DetailView):
         context['chain_tail'] = chain_tail
         return context
     
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        article = self.get_object()
+        article.unique_visitors.add(self.request.user)
+        return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         action = self.request.POST.get('action')
@@ -546,6 +549,7 @@ class ArticleSelectView(EditorOnlyMixin, generic.ListView):
                 queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=7))
             if pub_period == "published_last_month":
                 queryset = queryset.filter(pub_date__gte=timezone.now() - datetime.timedelta(days=30))
+        queryset = queryset.distinct()
         for article in queryset:
             photos = article.images.all()
             if photos:

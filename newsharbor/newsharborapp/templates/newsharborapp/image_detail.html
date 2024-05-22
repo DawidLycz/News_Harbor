@@ -7,8 +7,9 @@
 {% block content %}
 
 <div class="edit-tag-box">
-    <span style="color:rgb(207, 245, 255);">Click to remove</span>
+    <span style="color:rgb(207, 245, 255);">Click on tag to remove it.</span>
     <h3>Tags</h3>
+    <h3>Tags are keywords that allow you to find related articles simply by entering a tag in the search field.</h3>
     <form method="post" id="tagForm">
         {% csrf_token %}
         {% if image.tags.all %}
@@ -18,7 +19,7 @@
         {% else %}
             <h4>No tags yet</h4>
         {% endif %}
-        <h4 style="opacity: 0;">This should not appear</h4>
+        <h4>Provide tag or tags here. Separate tags with a comma to add multiple tags.</h4>
         <input name="tag_name" id="tagNameInput"></input>
         <button id="addTagButton" style="margin-left:50%; transform:translateX(-50%)" type="submit" name="action" value="add_tag">Add Tag</button>
     </form>
