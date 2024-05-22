@@ -14,9 +14,18 @@ from django.utils import timezone
 from django.views import generic
 from django.views.generic.edit import FormView, UpdateView
 
+from rest_framework import status, mixins, generics, permissions, renderers, viewsets, filters
+from rest_framework import generics as drfgenerics
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, action
+from rest_framework.parsers import JSONParser
+from rest_framework.reverse import reverse as drf_reverse
+
 from .article_generation import generate_article
 from .forms import *
 from .models import Article, Comment, Image, Paragraph, Profile, Tag
+from .serializers import *
 
 
 def clean_search_phrase(phrase) -> list[str]:
@@ -63,7 +72,15 @@ class IndexView(generic.ListView):
         else:
             context['articles'] = None
         return context
-        
+
+
+class InfoView(generic.TemplateView):
+    template_name = "newsharborapp/site_info.html"
+
+
+class InfoApiView(generic.TemplateView):
+    template_name = "newsharborapp/api_info.html"
+    
 
 class ArticleListView(generic.ListView):
     model = Article
@@ -188,7 +205,10 @@ class ArticleDetailView(generic.DetailView):
     
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         article = self.get_object()
-        article.unique_visitors.add(self.request.user)
+        try:
+            article.unique_visitors.add(self.request.user)
+        except TypeError:
+            pass
         return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
@@ -345,7 +365,7 @@ class UserChangePasswordView(FormView):
         return reverse_lazy('newsharborapp:profile', kwargs={'pk': self.request.user.profile.id})
 
 
-############### Work ##############
+############### Work ##########################
 
 
 
@@ -787,3 +807,14 @@ class TagDetailView(EditorOnlyMixin, generic.DetailView):
             tag.delete()
             return redirect(reverse_lazy('newsharborapp:tags'))
         return redirect(request.path)
+    
+
+#################### API ######################################
+
+
+class ApiArticleListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = Article.objects.filter(for_display=True)
+    serializer_class = ArticleSerializer
+    
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

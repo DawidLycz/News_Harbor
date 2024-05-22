@@ -39,7 +39,7 @@ nav button{
 
 html, body {
 
-    background: rgb(77, 76, 76) url("images/background.png") repeat;
+    background: rgb(77, 76, 76);
     background-attachment: fixed;
     background-size: cover;
     height: 100%;

@@ -32,6 +32,7 @@ AI_API_KEY = 'pk-uojpTslfPXZkUoVfetlFigRENLVXgCPAweGwrJNHxXukhgsC'
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'newsharborapp.apps.NewsharborappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
