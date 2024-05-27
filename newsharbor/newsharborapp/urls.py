@@ -39,5 +39,18 @@ urlpatterns = [
 
 #### API ####
 
-    path('api/articles/', views.ApiArticleListView.as_view(), name='api-articles')
+    path('api/articles/', views.ApiArticleListView.as_view(), name='api-articles'),
+    path('api/articles/<int:pk>/', views.ApiArticleDetailView.as_view(), name='api-article'),
+
+    path('api/paragraphs/', views.ApiParagraphListView.as_view(), name='api-paragraphs'),
+    path('api/paragraphs/<int:pk>/', views.ApiParagraphDetailView.as_view(), name='api-paragraph'),
+
+    path('api/images/', views.ApiImageListView.as_view(), name='api-images'),
+    path('api/images/<int:pk>/', views.ApiImageDetailView.as_view(), name='api-image'),
+
+    path('api/tags/', views.ApiTagListView.as_view(), name='api-tags'),
+    path('api/tags/<int:pk>/', views.ApiTagDetailView.as_view(), name='api-tag'),
+
+    path('api/comments/', views.ApiCommentListView.as_view(), name='api-comments'),
+    path('api/comments/<int:pk>/', views.ApiCommentDetailView.as_view(), name='api-comment'),
 ]

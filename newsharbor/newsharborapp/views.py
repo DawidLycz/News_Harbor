@@ -26,6 +26,7 @@ from .article_generation import generate_article
 from .forms import *
 from .models import Article, Comment, Image, Paragraph, Profile, Tag
 from .serializers import *
+from .permissions import *
 
 
 def clean_search_phrase(phrase) -> list[str]:
@@ -44,9 +45,10 @@ def clean_search_phrase(phrase) -> list[str]:
 
 class EditorOnlyMixin:
     def get(self, request, *args, **kwargs):
-        if not self.request.user.profile.is_editor:
-            return redirect(reverse_lazy('newsharborapp:home'))
-        return super().get(request, *args, **kwargs)
+        if self.request.user.is_authenticated:
+            if self.request.user.profile.is_editor:
+                return super().get(request, *args, **kwargs)
+        return redirect(reverse_lazy('newsharborapp:home'))
 
 
 class IndexView(generic.ListView):
@@ -815,6 +817,194 @@ class TagDetailView(EditorOnlyMixin, generic.DetailView):
 class ApiArticleListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = Article.objects.filter(for_display=True)
     serializer_class = ArticleSerializer
+    permission_classes = [IsEditorOrReadOnlyPermission]
+
+    def get_queryset(self):
+        queryset = Article.objects.all()
+        tags = (self.request.GET.get('tags'))
+        if tags:
+            search_words = clean_search_phrase(tags)
+            tags = Tag.objects.filter(name__in=search_words)
+            if tags.exists():
+                queryset = queryset.filter(tags__in=tags)
+            else:
+                queryset = Article.objects.none()
+        queryset = queryset.distinct()
+        return queryset
     
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class ApiArticleDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    queryset = Article.objects.filter(for_display=True)
+    serializer_class = ArticleSerializer
+    permission_classes = [ArticleApiViewCustmoPermission]
+
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+    
+    def put(self, request, *args, **kwargs):
+        article = self.get_object()
+        user = request.user
+        command = request.data.get('command')
+        if command:
+            if command == 'like':
+                article.fans.add(user)
+                return Response({'status': 'liked'}, status=status.HTTP_200_OK)
+            elif command == 'dislike':
+                article.fans.remove(user)
+                return Response({'status': 'disliked'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid command'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.update(request, *args, **kwargs)
+        
+
+class ApiParagraphListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = Paragraph.objects.all()
+    serializer_class = ParagraphSerializer
+
+    def get_queryset(self):
+        queryset = Paragraph.objects.all()
+        article = (self.request.GET.get('article'))
+        if article:
+            if article.isnumeric():
+                article_obj = Article.objects.get(pk=article)      
+                return Paragraph.objects.filter(article=article_obj)
+        return Paragraph.objects.all()
+        
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+class ApiParagraphDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    queryset = Paragraph.objects.all()
+    serializer_class = ParagraphSerializer
+    permission_classes = [EditorOnlyPermission]
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+    
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+class ApiImageListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = Image.objects.all()
+    serializer_class = ImageSerializer
+    permission_classes = [EditorOnlyPermission]
+
+    def get_queryset(self):
+        queryset = Image.objects.all()
+        tags = (self.request.GET.get('tags'))
+        if tags:
+            search_words = clean_search_phrase(tags)
+            tags = Tag.objects.filter(name__in=search_words)
+            if tags.exists():
+                queryset = queryset.filter(tags__in=tags)
+            else:
+                queryset = Image.objects.none()
+        queryset = queryset.distinct()
+        return queryset
+    
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class ApiImageDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    queryset = Image.objects.all()
+    serializer_class = ImageSerializer
+    permission_classes = [EditorOnlyPermission]
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+    
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+    
+
+class ApiTagListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagListSerializer
+    permission_classes = [EditorOnlyPermission]
+    
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+
+class ApiTagDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagDetailSerializer
+    permission_classes = [EditorOnlyPermission]
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+    
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+    
+
+class ApiCommentListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+
+class ApiCommentDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [CommentApiViewCustomPermission]
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        comment = self.get_object()
+        user = request.user
+        command = request.data.get('command')
+        if command:
+            if command == 'like':
+                comment.fans.add(user)
+                comment.haters.remove(user)
+                return Response({'status': 'liked'}, status=status.HTTP_200_OK)
+            elif command == 'dislike':
+                comment.fans.remove(user)
+                comment.haters.add(user)
+                return Response({'status': 'disliked'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid command'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return self.update(request, *args, **kwargs)

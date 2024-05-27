@@ -38,7 +38,7 @@ class Profile(models.Model):
 
 
 class Article(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, default="New article")
     author = models.ForeignKey(User, on_delete=models.SET_DEFAULT, default=None, null=True)
     for_display = models.BooleanField(default=False)
     unique_visitors = models.ManyToManyField(User, related_name="viewed_articles", blank=True)

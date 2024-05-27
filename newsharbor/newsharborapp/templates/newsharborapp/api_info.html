@@ -1,11 +1,131 @@
 {% extends 'newsharborapp/base.html' %}
 
 {% block title %}
-   About us
+   API Guide
 {% endblock %}
     
 {% block content %}
 
 <h5>Application Programming Interface</h5>
 <h2>Our website offers a robust Application Programming Interface (API) designed to give developers access to our extensive collection of articles. With this API, you can seamlessly integrate our content into your own applications, providing your users with up-to-date news and information.</h2>
+
+<h5>For Readers</h5>
+
+<h2>Get a Full List of All Articles</h2>
+<p>Send a GET request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/articles/</pre>
+
+<h2>Filter Articles by Tags</h2>
+<p>Add tags as parameters to filter the output. For example:</p>
+<pre>http://127.0.0.1:8000/api/articles/?tags=nature</pre>
+<p>You can add multiple tags:</p>
+<pre>http://127.0.0.1:8000/api/articles/?tags=nature,space,sport</pre>
+
+<h2>Get a Specific Article</h2>
+<p>Replace "X" with the article ID:</p>
+<pre>http://127.0.0.1:8000/api/articles/X/</pre>
+
+<h2>Like or Dislike an Article</h2>
+<p>Keep in mind, you need to provide your username and password</p>
+<p>Send a PUT request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/</pre>
+<p>With the following JSON body:</p>
+<pre>{"command":"like"}</pre>
+<p>or</p>
+<pre>{"command":"dislike"}</pre>
+
+
+
+
+<h5>For Comments and Feedback</h5>
+<h2>For most operations below, you need to provide username and password</h2>
+
+<h2>Add a Comment to an Article</h2>
+<p>Send a POST request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/comments/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "text": "Your comment text",
+    "author": "Author ID"
+}
+</pre>
+
+<h2>Get Comments of an Article</h2>
+<p>Send a GET request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/comments/</pre>
+
+<h2>Like or Dislike a Comment</h2>
+<p>Send a PUT request to the following address (replace "Y" with the comment ID):</p>
+<pre>http://127.0.0.1:8000/api/comments/Y/</pre>
+<p>With the following JSON body:</p>
+<pre>{"command":"like"}</pre>
+<p>or</p>
+<pre>{"command":"dislike"}</pre>
+
+
+
+
+
+<h5>For Editors</h5>
+<h2>For operations below, you need to provide username and password</h2>
+<h2>Create a New Article</h2>
+<p>Send a POST request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/articles/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "title": "Your article title",
+}
+</pre>
+
+<h2>Update an Article</h2>
+<p>Send a PUT request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/</pre>
+<p>With the following JSON body (you can update any field):</p>
+<pre>
+{
+    "title": "Updated article title"
+}
+</pre>
+
+<h2>Delete an Article</h2>
+<p>Send a DELETE request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/</pre>
+
+<h2>Managing Paragraphs</h2>
+
+<h4>Get a List of All Paragraphs</h4>
+<p>Send a GET request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/paragraphs/</pre>
+
+<h4>Create a New Paragraph</h4>
+<p>Send a POST request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/paragraphs/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "title": "Paragraph title",
+    "text": "Paragraph text",
+    "article": "Article ID"
+}
+</pre>
+
+<h4>Update a Paragraph</h4>
+<p>Send a PUT request to the following address (replace "X" with the paragraph ID):</p>
+<pre>http://127.0.0.1:8000/api/paragraphs/X/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "title": "Updated paragraph title",
+    "text": "Updated paragraph text"
+}
+</pre>
+
+<h4>Delete a Paragraph</h4>
+<p>Send a DELETE request to the following address (replace "X" with the paragraph ID):</p>
+<pre>http://127.0.0.1:8000/api/paragraphs/X/</pre>
+
+
+
 {% endblock %}
