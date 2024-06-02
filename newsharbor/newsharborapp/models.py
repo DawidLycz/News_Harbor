@@ -31,7 +31,7 @@ class Profile(models.Model):
         if self.belong_to("Editor"):
             self.is_editor = True
         if self.belong_to("Editor in Chief"):
-            self.is_editor_in_chief = True        
+            self.is_editor_in_chief = True
         if not self.name or self.name == "profile":
             self.name = self.get_profile_name()
         super().save(*args, **kwargs)
@@ -85,11 +85,7 @@ class Paragraph(models.Model):
     text = models.TextField(default='', blank=True)
     is_lead = models.BooleanField(default=False)
 
-    def save(self, *args, **kwargs) -> None:
-        if not self.title:
-            text_first_sentence = self.text.split(".", 1)[0]
-            self.title = text_first_sentence
-        
+    def save(self, *args, **kwargs) -> None:        
         if self.is_lead:
             existing_lead_paragraph = Paragraph.objects.filter(article=self.article, is_lead=True).first()
             if existing_lead_paragraph and existing_lead_paragraph != self:

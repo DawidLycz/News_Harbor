@@ -27,28 +27,7 @@ from .forms import *
 from .models import Article, Comment, Image, Paragraph, Profile, Tag
 from .serializers import *
 from .permissions import *
-
-
-def clean_search_phrase(phrase) -> list[str]:
-    for char in punctuation + digits:
-        phrase = phrase.replace(char, " ")
-    words = phrase.split()
-    words_list = []
-    for word in words:
-        if word:
-            word = word.capitalize()
-            words_list.append(word)
-            if word[-1] == "s":
-                words_list.append(word[:-1])
-    return words_list
-
-
-class EditorOnlyMixin:
-    def get(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            if self.request.user.profile.is_editor:
-                return super().get(request, *args, **kwargs)
-        return redirect(reverse_lazy('newsharborapp:home'))
+from .utils import *
 
 
 class IndexView(generic.ListView):
@@ -82,6 +61,13 @@ class InfoView(generic.TemplateView):
 
 class InfoApiView(generic.TemplateView):
     template_name = "newsharborapp/api_info.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if user.is_authenticated:
+            context['full_info'] = user.profile.is_editor
+        return context
     
 
 class ArticleListView(generic.ListView):
@@ -207,10 +193,9 @@ class ArticleDetailView(generic.DetailView):
     
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         article = self.get_object()
-        try:
+        user = self.request.user
+        if user.is_authenticated:
             article.unique_visitors.add(self.request.user)
-        except TypeError:
-            pass
         return super().get(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
@@ -840,9 +825,9 @@ class ApiArticleListView(mixins.ListModelMixin, mixins.CreateModelMixin, generic
 
 
 class ApiArticleDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
-    queryset = Article.objects.filter(for_display=True)
+    queryset = Article.objects.all()
     serializer_class = ArticleSerializer
-    permission_classes = [ArticleApiViewCustmoPermission]
+    permission_classes = [ArticleApiViewCustomPermission]
 
 
     def get(self, request, *args, **kwargs):
@@ -855,6 +840,9 @@ class ApiArticleDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, m
         article = self.get_object()
         user = request.user
         command = request.data.get('command')
+        topic = request.data.get('generate')
+        tags_to_add = request.data.get('add_tags')
+        tags_to_remove = request.data.get('remove_tags')
         if command:
             if command == 'like':
                 article.fans.add(user)
@@ -864,8 +852,37 @@ class ApiArticleDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, m
                 return Response({'status': 'disliked'}, status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Invalid command'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return self.update(request, *args, **kwargs)
+        elif topic:
+            Paragraph.objects.filter(article=article).delete()
+            article_dict = generate_article(topic)
+            paragraphs_num = (len(article_dict) - 1) // 2
+            article.title = article_dict.get('title', 'No title')
+            for num in range(paragraphs_num):
+                num += 1
+                title = article_dict.get(f"paragraph{num}_title", f"paragraph {num} title")
+                text = article_dict.get(f"paragraph{num}_text", f"paragraph {num} text")
+                Paragraph.objects.create(article=article, title=title, text=text, is_lead=num==1)
+            article.save()
+            return self.retrieve(request, *args, **kwargs)
+        elif tags_to_add:
+            tags = tags_to_add.split(',')
+            for tag_name in tags:
+                tag_name = tag_name.strip().capitalize()
+                tag = Tag.objects.filter(name=tag_name).first()
+                if not tag:
+                    tag = Tag.objects.create(name=tag_name)
+                    tag.save()
+                tag.articles.add(article)
+            return self.retrieve(request, *args, **kwargs)
+        elif tags_to_remove:
+            tags = tags_to_remove.split(',')
+            for tag in tags:
+                tag = Tag.objects.filter(name=tag).first()
+                if tag:
+                    tag.articles.remove(article)
+            return self.retrieve(request, *args, **kwargs)
+        
+        return self.update(request, *args, **kwargs)
         
 
 class ApiParagraphListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
@@ -873,7 +890,6 @@ class ApiParagraphListView(mixins.ListModelMixin, mixins.CreateModelMixin, gener
     serializer_class = ParagraphSerializer
 
     def get_queryset(self):
-        queryset = Paragraph.objects.all()
         article = (self.request.GET.get('article'))
         if article:
             if article.isnumeric():
@@ -900,6 +916,7 @@ class ApiParagraphDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
 
 class ApiImageListView(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = Image.objects.all()
@@ -935,6 +952,26 @@ class ApiImageDetailView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mix
         return self.retrieve(request, *args, **kwargs)
     
     def put(self, request, *args, **kwargs):
+        image = self.get_object()
+        tags_to_add = request.data.get('add_tags')
+        tags_to_remove = request.data.get('remove_tags')
+        if tags_to_add:
+            tags = tags_to_add.split(',')
+            for tag_name in tags:
+                tag_name = tag_name.strip().capitalize()
+                tag = Tag.objects.filter(name=tag_name).first()
+                if not tag:
+                    tag = Tag.objects.create(name=tag_name)
+                    tag.save()
+                tag.images.add(image)
+            return self.retrieve(request, *args, **kwargs)
+        elif tags_to_remove:
+            tags = tags_to_remove.split(',')
+            for tag in tags:
+                tag = Tag.objects.filter(name=tag).first()
+                if tag:
+                    tag.images.remove(image)
+            return self.retrieve(request, *args, **kwargs)
         return self.update(request, *args, **kwargs)
     
     def delete(self, request, *args, **kwargs):
@@ -972,6 +1009,14 @@ class ApiCommentListView(mixins.ListModelMixin, mixins.CreateModelMixin, generic
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = []
+
+    def get_queryset(self):
+        queryset = Comment.objects.all()
+        article_id = (self.request.GET.get('article'))
+        if article_id:
+            article = Article.objects.get(pk=article_id)
+            return article.comments
+        return queryset
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

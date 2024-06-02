@@ -6,6 +6,7 @@ from django.urls import reverse
 
 class ArticleSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='newsharborapp:article')
+    tags = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     text = serializers.SerializerMethodField()
     views = serializers.SerializerMethodField()
@@ -14,7 +15,10 @@ class ArticleSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Article
-        fields = ['url', 'id', 'title', 'author', 'text', 'pub_date', 'views', 'likes', 'comments']
+        fields = ['url', 'id', 'title', 'tags', 'author', 'text', 'pub_date', 'views', 'likes', 'comments']
+
+    def get_tags(self, obj):
+        return [tag.name for tag in obj.tags.all()]
 
     def get_author(self, obj):
         return obj.author.username

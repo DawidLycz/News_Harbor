@@ -1,3 +1,5 @@
+
+
 {% extends 'newsharborapp/base.html' %}
 
 {% block title %}
@@ -26,60 +28,95 @@
 <pre>http://127.0.0.1:8000/api/articles/X/</pre>
 
 <h2>Like or Dislike an Article</h2>
-<p>Keep in mind, you need to provide your username and password</p>
+<p>Keep in mind, you need to provide your username and password.</p>
 <p>Send a PUT request to the following address (replace "X" with the article ID):</p>
 <pre>http://127.0.0.1:8000/api/articles/X/</pre>
 <p>With the following JSON body:</p>
-<pre>{"command":"like"}</pre>
-<p>or</p>
-<pre>{"command":"dislike"}</pre>
-
-
-
-
-<h5>For Comments and Feedback</h5>
-<h2>For most operations below, you need to provide username and password</h2>
-
-<h2>Add a Comment to an Article</h2>
-<p>Send a POST request to the following address (replace "X" with the article ID):</p>
-<pre>http://127.0.0.1:8000/api/articles/X/comments/</pre>
-<p>With the following JSON body:</p>
 <pre>
 {
-    "text": "Your comment text",
-    "author": "Author ID"
+    "command": "like"
+}
+</pre>
+<p>or</p>
+<pre>
+{
+    "command": "dislike"
 }
 </pre>
 
+<h5>Comments and Feedback</h5>
+
+<h2>For most operations below, you need to provide your username and password.</h2>
+
+<h2>Get All Comments</h2>
+<p>Send a GET request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/comments/</pre>
+
+<h2>Get a Specific Comment</h2>
+<p>Send a GET request to the following address (replace "Y" with the comment ID):</p>
+<pre>http://127.0.0.1:8000/api/comments/Y/</pre>
+
 <h2>Get Comments of an Article</h2>
 <p>Send a GET request to the following address (replace "X" with the article ID):</p>
-<pre>http://127.0.0.1:8000/api/articles/X/comments/</pre>
+<p>WARNING: You can receive the same list among other elements in the article request above.</p>
+<pre>http://127.0.0.1:8000/api/comments/?article=X</pre>
 
 <h2>Like or Dislike a Comment</h2>
 <p>Send a PUT request to the following address (replace "Y" with the comment ID):</p>
 <pre>http://127.0.0.1:8000/api/comments/Y/</pre>
 <p>With the following JSON body:</p>
-<pre>{"command":"like"}</pre>
+<pre>
+{
+    "command": "like"
+}
+</pre>
 <p>or</p>
-<pre>{"command":"dislike"}</pre>
+<pre>
+{
+    "command": "dislike"
+}
+</pre>
 
+<h2>Add a Comment to an Article</h2>
+<p>Send a POST request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/comments/</pre>
+<p>With the following JSON body (replace "X" with the article ID):</p>
+<pre>
+{
+    "text": "Your comment text",
+    "author": "Author ID",
+    "article": "X"
+}
+</pre>
 
+<h2>Edit Your Comment</h2>
+<p>WARNING: You can edit only your own comments.</p>
+<p>Send a PUT request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/comments/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "text": "Your new comment text"
+}
+</pre>
 
+{% if full_info %}
+<h5>Article Editing</h5>
 
+<h2>For the operations below, you need to provide your username and password.</h2>
 
-<h5>For Editors</h5>
-<h2>For operations below, you need to provide username and password</h2>
 <h2>Create a New Article</h2>
 <p>Send a POST request to the following address:</p>
 <pre>http://127.0.0.1:8000/api/articles/</pre>
 <p>With the following JSON body:</p>
 <pre>
 {
-    "title": "Your article title",
+    "title": "Your article title"
 }
 </pre>
 
-<h2>Update an Article</h2>
+<h2>Edit Title</h2>
+<p>To edit the article text, you need to edit particular paragraphs. More information below.</p>
 <p>Send a PUT request to the following address (replace "X" with the article ID):</p>
 <pre>http://127.0.0.1:8000/api/articles/X/</pre>
 <p>With the following JSON body (you can update any field):</p>
@@ -89,17 +126,55 @@
 }
 </pre>
 
+<h2>Add/Remove Tags</h2>
+<p>Send a PUT request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/</pre>
+<p>With the following JSON body (you can update any field):</p>
+<p>(You can provide multiple tags, just separate them with commas)</p>
+<pre>
+{
+    "add_tags": "tag1, tag2, tag3"
+}
+</pre>
+<p>or</p>
+<pre>
+{
+    "remove_tags": "tag1, tag2, tag3"
+}
+</pre>
+
+<h2>Generate Article with AI</h2>
+<p>WARNING: All assigned paragraph texts will be replaced with AI-generated content.</p>
+<p>WARNING: In case the article title becomes "format error," you can send the same request again or correct it manually.</p>
+<p>Send a PUT request to the following address (replace "X" with the article ID):</p>
+<pre>http://127.0.0.1:8000/api/articles/X/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "generate": "topic of the article"
+}
+</pre>
+
 <h2>Delete an Article</h2>
+<p>This action can be executed only by the editor-in-chief.</p>
 <p>Send a DELETE request to the following address (replace "X" with the article ID):</p>
 <pre>http://127.0.0.1:8000/api/articles/X/</pre>
 
-<h2>Managing Paragraphs</h2>
-
-<h4>Get a List of All Paragraphs</h4>
+<h2>Get a List of All Paragraphs</h2>
 <p>Send a GET request to the following address:</p>
 <pre>http://127.0.0.1:8000/api/paragraphs/</pre>
 
-<h4>Create a New Paragraph</h4>
+<h2>Get Paragraphs of an Article</h2>
+<p>Send a GET request to the following address (replace "X" with the article ID):</p>
+<p>WARNING: You can receive the same list among other elements in the article request above.</p>
+<pre>http://127.0.0.1:8000/api/paragraphs/?article=X</pre>
+
+
+<h2>Get a Specific Paragraph</h2>
+<p>Send a GET request to the following address (replace "X" with the paragraph ID):</p>
+<pre>http://127.0.0.1:8000/api/paragraphs/X/</pre>
+
+<h2>Create a New Paragraph</h2>
 <p>Send a POST request to the following address:</p>
 <pre>http://127.0.0.1:8000/api/paragraphs/</pre>
 <p>With the following JSON body:</p>
@@ -111,7 +186,7 @@
 }
 </pre>
 
-<h4>Update a Paragraph</h4>
+<h2>Update a Paragraph</h2>
 <p>Send a PUT request to the following address (replace "X" with the paragraph ID):</p>
 <pre>http://127.0.0.1:8000/api/paragraphs/X/</pre>
 <p>With the following JSON body:</p>
@@ -122,10 +197,98 @@
 }
 </pre>
 
-<h4>Delete a Paragraph</h4>
+<h2>Delete a Paragraph</h2>
 <p>Send a DELETE request to the following address (replace "X" with the paragraph ID):</p>
 <pre>http://127.0.0.1:8000/api/paragraphs/X/</pre>
 
+<h5>Image Management</h5>
 
+<h2>Get a Full List of All Images</h2>
+<p>Send a GET request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/images/</pre>
 
+<h2>Filter Images by Tags</h2>
+<p>Add tags as parameters to filter the output. For example:</p>
+<pre>http://127.0.0.1:8000/api/images/?tags=nature</pre>
+<p>You can add multiple tags:</p>
+<pre>http://127.0.0.1:8000/api/images/?tags=nature,space,sport</pre>
+
+<h2>Get a Specific Image</h2>
+<p>Send a GET request to the following address (replace "X" with the image ID):</p>
+<pre>http://127.0.0.1:8000/api/images/X/</pre>
+
+<h2>Upload an Image</h2>
+<p>Send a POST request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/images/</pre>
+<p>With the following form data:</p>
+<pre>
+name: The name of the image (string) (optional)
+photo: The image file (file)
+</pre>
+<p>Example using cURL:</p>
+<pre>
+curl -X POST http://127.0.0.1:8000/api/images/ \
+  -u your_username:your_password \
+  -F "name=Image name" \
+  -F "photo=@/path/to/your/image.jpg"
+</pre>
+
+<h2>Edit Image Name</h2>
+<p>Send a PUT request to the following address (replace "X" with the image ID):</p>
+<pre>http://127.0.0.1:8000/api/images/X/</pre>
+<p>With the following JSON body:</p>
+<pre>
+{
+    "name": "New image name"
+}
+</pre>
+
+<h2>Add/Remove Tags</h2>
+<p>Send a PUT request to the following address (replace "X" with the image ID):</p>
+<pre>http://127.0.0.1:8000/api/images/X/</pre>
+<p>With the following JSON body (you can update any field):</p>
+<p>(You can provide multiple tags, just separate them with commas)</p>
+<pre>
+{
+    "add_tags": "tag1, tag2, tag3"
+}
+</pre>
+<p>or</p>
+<pre>
+{
+    "remove_tags": "tag1, tag2, tag3"
+}
+</pre>
+
+<h2>Delete an Image</h2>
+<p>Send a DELETE request to the following address (replace "X" with the image ID):</p>
+<pre>http://127.0.0.1:8000/api/images/X/</pre>
+
+<h5>Tags</h5>
+
+<h2>Get a Full List of All Tags</h2>
+<p>Send a GET request to the following address:</p>
+<pre>http://127.0.0.1:8000/api/tags/</pre>
+
+<h2>Get a Specific Tag</h2>
+<p>Send a GET request to the following address (replace "X" with the tag ID):</p>
+<pre>http://127.0.0.1:8000/api/tags/X/</pre>
+
+<h2>Edit Tag</h2>
+<p>Send a PUT request to the following address (replace "X" with the tag ID):</p>
+<pre>http://127.0.0.1:8000/api/tags/X/</pre>
+<p>With the following JSON body (you can update any field):</p>
+<pre>
+{
+    "name": "new tag name",
+    "major": true or false
+}
+</pre>
+
+<h2>Delete Tag</h2>
+<p>Send a DELETE request to the following address (replace "X" with the tag ID):</p>
+<pre>http://127.0.0.1:8000/api/tags/X/</pre>
+
+{% endif %}
+<h5></h5>
 {% endblock %}

@@ -37,7 +37,7 @@ class EditorOnlyPermission(permissions.BasePermission):
             return request.user.profile.is_editor
         return False
     
-class ArticleApiViewCustmoPermission(permissions.BasePermission):
+class ArticleApiViewCustomPermission(permissions.BasePermission):
     """
     Custom permission for specific view. Grants access to put method, only in case user sends arg "command"
     """
@@ -59,6 +59,11 @@ class ArticleApiViewCustmoPermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.user.is_authenticated:
+            if request.method == "DELETE":
+                if request.user.profile.is_editor_in_chief:
+                    return True
+                else:
+                    return False
             if request.user.profile.is_editor:
                 return True
             else:

@@ -93,7 +93,7 @@ if 'PYTHONANYWHERE_DOMAIN' in os.environ:
             'HOST': 'DawidLycz.mysql.pythonanywhere-services.com',
             'PORT': '3306',
             'TEST': {
-                'NAME': 'test_getstock_db',
+                'NAME': 'test_newsharbor_db',
             },
         }
     }
