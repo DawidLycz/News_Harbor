@@ -270,26 +270,22 @@ class CustomRegisterEditorView(EditorOnlyMixin, generic.CreateView):
     form_class = CustomEditorCreationForm
     success_url = reverse_lazy('newsharborapp:home')
 
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            user = form.save()
-            is_editor_in_chief = form.cleaned_data.get('is_editor_in_chief', False)
-            is_editor = form.cleaned_data.get('is_editor', False)
-            reader_group = Group.objects.get(name='Reader')
+    def form_valid(self, form):
+        user = form.save()
+        is_editor_in_chief = form.cleaned_data.get('is_editor_in_chief', False)
+        is_editor = form.cleaned_data.get('is_editor', False)
+        reader_group = Group.objects.get(name='Reader')
+        editor_group = Group.objects.get(name='Editor')
+        editor_in_chief_group = Group.objects.get(name='Editor in Chief')
+        if is_editor_in_chief:
+            user.groups.add(editor_group)
+            user.groups.add(editor_in_chief_group)
+        elif is_editor:
             editor_group = Group.objects.get(name='Editor')
-            editor_in_chief_group = Group.objects.get(name='Editor in Chief')
-            if is_editor_in_chief:
-                user.groups.add(editor_group)
-                user.groups.add(editor_in_chief_group)
-            elif is_editor:
-                editor_group = Group.objects.get(name='Editor')
-                user.groups.add(editor_group)
-            user.groups.add(reader_group)
-            Profile.objects.create(user=user, is_editor_in_chief=is_editor_in_chief, is_editor=is_editor)
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+            user.groups.add(editor_group)
+        user.groups.add(reader_group)
+        Profile.objects.create(user=user, is_editor_in_chief=is_editor_in_chief, is_editor=is_editor)
+        return super().form_valid(form)
 
     def get_success_url(self):
         return self.success_url
@@ -506,7 +502,15 @@ class ImageCreateView(EditorOnlyMixin, generic.CreateView):
     form_class = ImageCreateForm
     template_name = 'newsharborapp/image_create.html'
     success_url = reverse_lazy('newsharborapp:images')
-
+    
+    def form_valid(self, form):
+        image_instance = form.save(commit=False)
+        name = image_instance.photo.name
+        if "." in name:
+            name = name.rsplit(".", 1)[0]
+        image_instance.name = name
+        image_instance.save()
+        return super().form_valid(form)
 
 class ImageDeleteView(EditorOnlyMixin, generic.DeleteView):
 
