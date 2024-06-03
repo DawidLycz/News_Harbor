@@ -3,7 +3,7 @@ News Harbor is modern media site, powered by AI aricle generations.
 
 Visit website:
 
-http://dawidlycz2.pythonanywhere.com/
+[NEWS HARBOR](http://dawidlycz2.pythonanywhere.com/)
 
 ## About the App
 News Harbor is a web application built on the Django framework, allowing users to browse articles about various topics. Modern design imporoves user expirience. Additionally, the application has possibility to generate article about any topic by simply providing it in one text field.
@@ -24,10 +24,40 @@ News Harbor is a web application built on the Django framework, allowing users t
 * AI Article Generation: Main feature of News Harbor is possibility to generate articles with help of artificial inteligence. In editors panel, mentioned before, there is possibility to provide a topic, and send request to AI endpoint, which returns article. Next, article is formatted by script, so it fits perfectly to a database.
 
 * API: Application has API. More information about it, directly in website.
-## Become an Editor:
+### Become an Editor:
+I would like to share experience of being a editor on this website, so if you are intrested in, you can make your own article.
+We will toghether make an article about Japan.
+Please just follow these steps:
 
-<img src="tutorial_images/tutorial1.png" alt="Tutorial Image1" width="800" height="600">
+At first, you must log in. In top right corner, you can see that you are logged as a guest. In order to change that, click "log in".
 
+<img src="tutorial_images/tutorial1.PNG" alt="Tutorial Image">
+
+Now you are in login screen. Here you must provide username and password. For purpose of tutrial i have prepered account already.
+
+username: Besteditor123 password: password321
+
+<img src="tutorial_images/tutorial2.PNG" alt="Tutorial Image">
+
+After you click login, you can see in top right corner your username. Let's move to editor panel. You can find it just next to your username.
+
+<img src="tutorial_images/tutorial3.PNG" alt="Tutorial Image">
+
+Now you are in editor panel. Here you can manage website. Let's just focus on our article. Click on "Create New Article".
+
+<img src="tutorial_images/tutorial4.PNG" alt="Tutorial Image">
+
+We are now in article editing panel. Here you can add text, photos, tags to an article. It is recommended to start with text.
+Let's just use AI feature. Scroll down and input "Japan" in textfield, than click a "Generate" button and wait a while.
+(This might take some time, one minute max)
+
+<img src="tutorial_images/tutorial5.PNG" alt="Tutorial Image">
+
+Now you can see that article has been generated and divided into paragraphs. Most likely last paragraph is cuted off, so you might want to delete it completly, or delete only last sentence of it.
+(In case title of article is "format error", scroll down, and generate it again).
+Now let's focus on images. There are already few images regarding Japan in database. They can be assigned by button: "Assign new Image"
+
+<img src="tutorial_images/tutorial6.PNG" alt="Tutorial Image">
 
 ## Dependencies
 
