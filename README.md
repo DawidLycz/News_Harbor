@@ -54,10 +54,37 @@ Let's just use AI feature. Scroll down and input "Japan" in textfield, than clic
 <img src="tutorial_images/tutorial5.PNG" alt="Tutorial Image">
 
 Now you can see that article has been generated and divided into paragraphs. Most likely last paragraph is cuted off, so you might want to delete it completly, or delete only last sentence of it.
+After that, remember to save it, with "Save Text" button below.
 (In case title of article is "format error", scroll down, and generate it again).
-Now let's focus on images. There are already few images regarding Japan in database. They can be assigned by button: "Assign new Image"
+Now let's focus on images. There are already few images regarding Japan in database. They can be assigned by button: "Assign new Image".
 
 <img src="tutorial_images/tutorial6.PNG" alt="Tutorial Image">
+
+This is image assigning panel, here you can assign image to an article. There are already few images that would fit article about Japan. Click one of them to assign it.
+
+<img src="tutorial_images/tutorial7.PNG" alt="Tutorial Image">
+
+As you can see, you are back in article edit panel. In image box, appears image that you assinged. Now assign few more.
+
+<img src="tutorial_images/tutorial8.PNG" alt="Tutorial Image">
+
+There are 5 images regarding Japan: japan1, japan2, japan3, japan5, japan6 (there is no nr5). You can find them manually, or by typing in "japan" in search field.
+After that, you should see all of them in image box, and in top left corner you should see that you assigned "Images: 5".
+
+<img src="tutorial_images/tutorial9.PNG" alt="Tutorial Image">
+
+Now when it't all done, it is good idea to provide some tags. Above, there is tag managment panel, you can type in tags here. You don't have to type in tags one by one, you can simply add multiple tags simply by separeting them with comma and click "Add tag" button.
+You can add as many tags as you want, but its sufficient to add those: asia, japan, travel, nature
+
+<img src="tutorial_images/tutorial10.PNG" alt="Tutorial Image">
+
+Laset but not least, you must set this article visible. You can make it simply by clicking button "Set For display" in top right.
+
+<img src="tutorial_images/tutorial11.PNG" alt="Tutorial Image">
+
+Thats it. Article is ready. You should be able to see it, on a homepage.
+
+<img src="tutorial_images/tutorial12.PNG" alt="Tutorial Image">
 
 ## Dependencies
 
