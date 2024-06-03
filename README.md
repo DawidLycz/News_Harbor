@@ -1,5 +1,7 @@
 # News_Harbor
-Everyday regular media website
+News Harbor is advenced media web aplication powered by AI.
+
+
 
 username: Besteditor123
 password: password321

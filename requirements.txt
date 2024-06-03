@@ -1,0 +1,4 @@
+django==5.0.1
+djangorestframework==3.14.0
+mysqlclient==2.2.1
+requests==2.32.2
